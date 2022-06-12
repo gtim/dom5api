@@ -1,0 +1,3 @@
+[submodule "dom5inspector"]
+	path = dom5inspector
+	url = https://github.com/larzm42/dom5inspector
