@@ -1,6 +1,6 @@
 RewriteEngine On
 
-RewriteRule ^items/(\d+)/screenshot\.png data/screenshot/item/$1.png [QSA,L]
+RewriteRule ^items/(\d+)/screenshot$ data/screenshot/item/$1.png [QSA,L]
 
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteCond %{REQUEST_FILENAME} !-f
