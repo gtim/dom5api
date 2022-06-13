@@ -1,4 +1,3 @@
-node_modules
+generate_data/node_modules/
 api/vendor/
 *~
-.*
