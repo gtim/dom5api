@@ -2,6 +2,8 @@
  * gen_item_screenshots.js
  *
  * Generate screenshots of dom5inspector popups for all items.
+ *
+ * Expects dom5inspector running at localhost:8000.
  */
 
 const puppeteer = require('puppeteer');
