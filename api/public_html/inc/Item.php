@@ -27,6 +27,22 @@ class Item implements JsonSerializable {
 		$db->close();
 		return $item;
 	}
+	
+	# Constructs item from name
+	# return: Item, or null if no matching name
+	public static function from_name( string $name ) {
+		$db = new SQLite3( 'data/items.db' );
+		$stmt = $db->prepare( 'SELECT id, name FROM items WHERE name=:name' );
+		$stmt->bindValue( ':name', $name, SQLITE3_TEXT );
+		$result = $stmt->execute();
+		if ( $row = $result->fetchArray() ) {
+			$item = new Item( id: $row['id'], name: $row['name'] );
+		} else {
+			$item = null;
+		}
+		$db->close();
+		return $item;
+	}
 
 	/*
 	 * Getters

@@ -33,4 +33,31 @@ $app->get( '/items/{id:[0-9]+}', function( Request $request, Response $response,
 	}
 });
 
+#
+# /items?name=...
+#
+
+$app->get( '/items', function( Request $request, Response $response, array $args ) {
+	$params = $request->getQueryParams();
+
+	# ensure name query parameter was supplied
+	if ( ! array_key_exists( 'name', $params ) ) {
+		$response->getBody()->write( json_encode( [ 'errors' => [ [
+			'title' => 'Query parameter "name" unspecified'
+		] ] ] ) );
+		return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
+	} 
+
+	require_once('inc/Item.php');
+	$item = Item::from_name( $params['name'] );
+	if ($item) {
+		$response->getBody()->write(
+			json_encode( $item, JSON_UNESCAPED_SLASHES )
+		);
+		return $response->withHeader('Content-Type', 'application/json')->withStatus(200);
+	} else {
+		return $response->withHeader('Content-Type', 'application/json')->withStatus(404);
+	}
+});
+
 $app->run();
