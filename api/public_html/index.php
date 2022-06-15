@@ -54,13 +54,13 @@ $app->get( '/items', function( Request $request, Response $response, array $args
 	require_once('inc/Item.php');
 
 	if ( array_key_exists( 'match', $params ) && $params['match'] == 'fuzzy' ) {
-		$items = Item::items_with_similar_name( $params['name'] );
+		$items = Item::items_with_similar_name( $params['name'], $similarity );
+		$data = array( 'items' => $items, 'similarity' => $similarity );
 	} else {
 		$items = Item::items_with_name( $params['name'] );
+		$data = array( 'items' => $items );
 	}
-	$response->getBody()->write(
-		json_encode( array( 'items' => $items ), JSON_UNESCAPED_SLASHES )
-	);
+	$response->getBody()->write( json_encode( $data, JSON_UNESCAPED_SLASHES ) );
 	return $response->withHeader('Content-Type', 'application/json')->withStatus(200);
 });
 

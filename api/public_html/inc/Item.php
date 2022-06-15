@@ -51,15 +51,17 @@ class Item implements JsonSerializable {
 	#
 	# Constructs list of items with similar name, using fuzzy string matching
 	# return: array of Items. Contains the best match, or multiple matches if tied
-	public static function items_with_similar_name( string $name ) :array {
+	public static function items_with_similar_name( string $name, &$max_similarity ) :array {
 		$needle = strtoupper($name);
 		$db = new SQLite3( 'data/items.db' );
 		$stmt = $db->prepare( 'SELECT id, name FROM items' );
 		$result = $stmt->execute();
-		$max_similarity = 0;
+		$max_similarity = -1e6;
 		$rows_at_max = array();
 		while ( $row = $result->fetchArray() ) {
-			$similarity = similar_text( $needle, strtoupper($row['name']) );
+			# Finding a proper "similar-text" measure is not straight-forward.
+			# Pull-requests for better alternatives are welcome.
+			$similarity = -round( levenshtein( $needle, strtoupper($row['name']), 1, 100, 100 ) / 5 );
 			if ( $similarity > $max_similarity ) {
 				$max_similarity = $similarity;
 				$rows_at_max = array( $row );
