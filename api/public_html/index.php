@@ -20,26 +20,15 @@ $app->get( '/', function( Request $request, Response $response, $args ) {
 # 
 
 $app->get( '/items/{id}', function( Request $request, Response $response, array $args ) {
-
-	$result = '123';
-	$db = new SQLite3('data/items.db');
-	$stmt = $db->prepare('SELECT id, name FROM items WHERE id=:id');
-	$stmt->bindValue(':id', $args['id'], SQLITE3_INTEGER );
-	$result = $stmt->execute();
-	if ( $row = $result->fetchArray() ) {
-
-		$data = array(
-			'id' => $row['id'],
-			'name' => $row['name'],
-			'screenshot' => sprintf( '/items/%d/screenshot', $row['id'] )
+	require_once('inc/Item.php');
+	$item = Item::from_id( $args['id'] );
+	if ($item) {
+		$response->getBody()->write(
+			json_encode( $item, JSON_UNESCAPED_SLASHES )
 		);
-		$response->getBody()->write( json_encode( $data, JSON_UNESCAPED_SLASHES ) );
 		return $response->withHeader('Content-Type', 'application/json')->withStatus(200);
-
 	} else {
-
 		return $response->withHeader('Content-Type', 'application/json')->withStatus(404);
-
 	}
 });
 
