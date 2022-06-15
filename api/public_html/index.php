@@ -15,11 +15,12 @@ $app->get( '/', function( Request $request, Response $response, $args ) {
 });
 
 
+
 #
 # /items/{id}
 # 
 
-$app->get( '/items/{id}', function( Request $request, Response $response, array $args ) {
+$app->get( '/items/{id:[0-9]+}', function( Request $request, Response $response, array $args ) {
 	require_once('inc/Item.php');
 	$item = Item::from_id( $args['id'] );
 	if ($item) {
