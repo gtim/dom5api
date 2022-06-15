@@ -13,9 +13,9 @@ const db = new sqlite3.Database('../data/items.db' ).serialize();
 
 // regenerate items sqlite table
 db.run("DROP TABLE IF EXISTS items");
-db.run("CREATE TABLE items (         \
-	id INT NOT NULL PRIMARY KEY, \
-	name TEXT NOT NULL           \
+db.run("CREATE TABLE items (               \
+	id INT NOT NULL PRIMARY KEY,       \
+	name TEXT NOT NULL COLLATE NOCASE  \
 )");
 
 
