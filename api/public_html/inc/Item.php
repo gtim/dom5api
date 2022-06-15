@@ -12,6 +12,8 @@ class Item implements JsonSerializable {
 	) {
 	}
 
+	# from_id
+	#
 	# Constructs item from id
 	# return: Item, or null if no matching ID
 	public static function from_id( int $id ) {
@@ -28,6 +30,8 @@ class Item implements JsonSerializable {
 		return $item;
 	}
 	
+	# items_with_name
+	#
 	# Constructs list of items with name
 	# return: array of Items (empty array if no match)
 	public static function items_with_name( string $name ) :array {
@@ -40,6 +44,34 @@ class Item implements JsonSerializable {
 			array_push( $items, new Item( id: $row['id'], name: $row['name'] ) );
 		}
 		$db->close();
+		return $items;
+	}
+
+	# items_with_similar name
+	#
+	# Constructs list of items with similar name, using fuzzy string matching
+	# return: array of Items. Contains the best match, or multiple matches if tied
+	public static function items_with_similar_name( string $name ) :array {
+		$needle = strtoupper($name);
+		$db = new SQLite3( 'data/items.db' );
+		$stmt = $db->prepare( 'SELECT id, name FROM items' );
+		$result = $stmt->execute();
+		$max_similarity = 0;
+		$rows_at_max = array();
+		while ( $row = $result->fetchArray() ) {
+			$similarity = similar_text( $needle, strtoupper($row['name']) );
+			if ( $similarity > $max_similarity ) {
+				$max_similarity = $similarity;
+				$rows_at_max = array( $row );
+			} elseif ( $similarity == $max_similarity ) {
+				array_push( $rows_at_max, $row );
+			}
+		}
+		$db->close();
+		$items = array_map(
+			function($row){ return new Item( id: $row['id'], name: $row['name'] ); },
+			$rows_at_max
+		);
 		return $items;
 	}
 

@@ -35,6 +35,7 @@ $app->get( '/items/{id:[0-9]+}', function( Request $request, Response $response,
 
 #
 # /items?name=...
+# /items?name=...&match=fuzzy
 #
 # returns array of matching items 
 #
@@ -51,7 +52,12 @@ $app->get( '/items', function( Request $request, Response $response, array $args
 	} 
 
 	require_once('inc/Item.php');
-	$items = Item::items_with_name( $params['name'] );
+
+	if ( array_key_exists( 'match', $params ) && $params['match'] == 'fuzzy' ) {
+		$items = Item::items_with_similar_name( $params['name'] );
+	} else {
+		$items = Item::items_with_name( $params['name'] );
+	}
 	$response->getBody()->write(
 		json_encode( array( 'items' => $items ), JSON_UNESCAPED_SLASHES )
 	);
