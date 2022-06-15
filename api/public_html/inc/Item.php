@@ -43,7 +43,7 @@ class Item implements JsonSerializable {
 	 * Custom JSON serialization into the object presented to API consumers
 	 */
 
-	public function jsonSerialize() {
+	public function jsonSerialize(): array {
 		return [
 			'id' => $this->id,
 			'name' => $this->name,
