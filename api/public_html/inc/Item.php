@@ -28,20 +28,19 @@ class Item implements JsonSerializable {
 		return $item;
 	}
 	
-	# Constructs item from name
-	# return: Item, or null if no matching name
-	public static function from_name( string $name ) {
+	# Constructs list of items with name
+	# return: array of Items (empty array if no match)
+	public static function items_with_name( string $name ) :array {
 		$db = new SQLite3( 'data/items.db' );
 		$stmt = $db->prepare( 'SELECT id, name FROM items WHERE name=:name' );
 		$stmt->bindValue( ':name', $name, SQLITE3_TEXT );
 		$result = $stmt->execute();
-		if ( $row = $result->fetchArray() ) {
-			$item = new Item( id: $row['id'], name: $row['name'] );
-		} else {
-			$item = null;
+		$items = array();
+		while ( $row = $result->fetchArray() ) {
+			array_push( $items, new Item( id: $row['id'], name: $row['name'] ) );
 		}
 		$db->close();
-		return $item;
+		return $items;
 	}
 
 	/*

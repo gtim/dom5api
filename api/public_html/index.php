@@ -36,6 +36,8 @@ $app->get( '/items/{id:[0-9]+}', function( Request $request, Response $response,
 #
 # /items?name=...
 #
+# returns array of matching items 
+#
 
 $app->get( '/items', function( Request $request, Response $response, array $args ) {
 	$params = $request->getQueryParams();
@@ -43,21 +45,17 @@ $app->get( '/items', function( Request $request, Response $response, array $args
 	# ensure name query parameter was supplied
 	if ( ! array_key_exists( 'name', $params ) ) {
 		$response->getBody()->write( json_encode( [ 'errors' => [ [
-			'title' => 'Query parameter "name" unspecified'
+			'title' => 'Query parameter "name" not specified'
 		] ] ] ) );
 		return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
 	} 
 
 	require_once('inc/Item.php');
-	$item = Item::from_name( $params['name'] );
-	if ($item) {
-		$response->getBody()->write(
-			json_encode( $item, JSON_UNESCAPED_SLASHES )
-		);
-		return $response->withHeader('Content-Type', 'application/json')->withStatus(200);
-	} else {
-		return $response->withHeader('Content-Type', 'application/json')->withStatus(404);
-	}
+	$items = Item::items_with_name( $params['name'] );
+	$response->getBody()->write(
+		json_encode( array( 'items' => $items ), JSON_UNESCAPED_SLASHES )
+	);
+	return $response->withHeader('Content-Type', 'application/json')->withStatus(200);
 });
 
 $app->run();
