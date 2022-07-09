@@ -23,17 +23,18 @@ const puppeteer = require('puppeteer');
 
 		// Get entities (items/events)
 		const overlay = await page.$('#'+type+'-page div.fixed-overlay')
-		const entities = await page.evaluate( (type) => {
-			return Promise.resolve( DMI.modctx[type+'data'] )
+		const num_entities = await page.evaluate( (type) => {
+			return Promise.resolve( DMI.modctx[type+'data'].length )
 		}, type );
 
 		// Render and capture overlays
-		for ( let entity_i = 0; entity_i < entities.length; entity_i++ ) {
+		for ( let entity_i = 0; entity_i < num_entities; entity_i++ ) {
 
 			// render entity to fixed overlay
-			await page.evaluate( (type,entity_i) => {
+			const entity_id = await page.evaluate( (type,entity_i) => {
 				const entity = DMI.modctx[type+'data'][entity_i];
 				$('#'+type+'-page div.fixed-overlay').empty().append( entity.renderOverlay(entity) );
+				return entity.id;
 			}, type, entity_i );
 
 			// sleep waiting for element to unfold: should be a proper await
@@ -41,7 +42,7 @@ const puppeteer = require('puppeteer');
 
 			// screenshot overlay
 			const overlay = await page.$('#'+type+'-page div.fixed-overlay')
-			await overlay.screenshot({ path: '../data/screenshot/'+type+'/' + entities[entity_i].id + '.png' });
+			await overlay.screenshot({ path: '../data/screenshot/'+type+'/' + entity_id + '.png' });
 		}
 	}
 
