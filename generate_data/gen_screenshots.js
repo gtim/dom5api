@@ -16,7 +16,7 @@ const puppeteer = require('puppeteer');
 	await page.$('#page-tabs');
 
 
-	for ( const type of ['item', 'event'] ) {
+	for ( const type of ['item', 'spell', 'event'] ) {
 
 		// Go to correct tab
 		await page.evaluate( (type) => { $('#'+type+'-page-button').trigger('click'); }, type );
