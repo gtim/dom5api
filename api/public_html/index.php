@@ -55,11 +55,10 @@ $app->get( '/items', function( Request $request, Response $response, array $args
 
 	if ( array_key_exists( 'match', $params ) && $params['match'] == 'fuzzy' ) {
 		$items = Item::entities_with_similar_name( $params['name'], $similarity );
-		$data = array( 'items' => $items, 'similarity' => $similarity );
 	} else {
 		$items = Item::entities_with_name( $params['name'] );
-		$data = array( 'items' => $items );
 	}
+	$data = array( 'items' => $items );
 	$response->getBody()->write( json_encode( $data, JSON_UNESCAPED_SLASHES ) );
 	return $response->withHeader('Content-Type', 'application/json')->withStatus(200);
 });
@@ -102,11 +101,10 @@ $app->get( '/spells', function( Request $request, Response $response, array $arg
 
 	if ( array_key_exists( 'match', $params ) && $params['match'] == 'fuzzy' ) {
 		$items = Spell::entities_with_similar_name( $params['name'], $similarity );
-		$data = array( 'spells' => $items, 'similarity' => $similarity );
 	} else {
 		$items = Spell::entities_with_name( $params['name'] );
-		$data = array( 'spells' => $items );
 	}
+	$data = array( 'spells' => $items );
 	$response->getBody()->write( json_encode( $data, JSON_UNESCAPED_SLASHES ) );
 	return $response->withHeader('Content-Type', 'application/json')->withStatus(200);
 });
