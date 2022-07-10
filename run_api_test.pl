@@ -8,6 +8,7 @@
 # Tests to write:
 # - ensure screenshot URL is returned
 # - ensure screenshot is a PNG image
+# - /spells endpoints
 
 use 5.34.0;
 use utf8;

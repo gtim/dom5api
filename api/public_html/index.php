@@ -54,14 +54,60 @@ $app->get( '/items', function( Request $request, Response $response, array $args
 	require_once('inc/Item.php');
 
 	if ( array_key_exists( 'match', $params ) && $params['match'] == 'fuzzy' ) {
-		$items = Item::items_with_similar_name( $params['name'], $similarity );
-		$data = array( 'items' => $items, 'similarity' => $similarity );
+		$items = Item::entities_with_similar_name( $params['name'], $similarity );
 	} else {
-		$items = Item::items_with_name( $params['name'] );
-		$data = array( 'items' => $items );
+		$items = Item::entities_with_name( $params['name'] );
 	}
+	$data = array( 'items' => $items );
+	$response->getBody()->write( json_encode( $data, JSON_UNESCAPED_SLASHES ) );
+	return $response->withHeader('Content-Type', 'application/json')->withStatus(200);
+});
+
+#
+# /spells/{id}
+# 
+
+$app->get( '/spells/{id:[0-9]+}', function( Request $request, Response $response, array $args ) {
+	require_once('inc/Spell.php');
+	$item = Spell::from_id( $args['id'] );
+	if ($item) {
+		$response->getBody()->write(
+			json_encode( $item, JSON_UNESCAPED_SLASHES )
+		);
+		return $response->withHeader('Content-Type', 'application/json')->withStatus(200);
+	} else {
+		return $response->withHeader('Content-Type', 'application/json')->withStatus(404);
+	}
+});
+#
+# /spells?name=...
+# /spells?name=...&match=fuzzy
+#
+# returns array of matching spells 
+#
+
+$app->get( '/spells', function( Request $request, Response $response, array $args ) {
+	$params = $request->getQueryParams();
+
+	# ensure name query parameter was supplied
+	if ( ! array_key_exists( 'name', $params ) ) {
+		$response->getBody()->write( json_encode( [ 'errors' => [ [
+			'title' => 'Query parameter "name" not specified'
+		] ] ] ) );
+		return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
+	} 
+
+	require_once('inc/Spell.php');
+
+	if ( array_key_exists( 'match', $params ) && $params['match'] == 'fuzzy' ) {
+		$items = Spell::entities_with_similar_name( $params['name'], $similarity );
+	} else {
+		$items = Spell::entities_with_name( $params['name'] );
+	}
+	$data = array( 'spells' => $items );
 	$response->getBody()->write( json_encode( $data, JSON_UNESCAPED_SLASHES ) );
 	return $response->withHeader('Content-Type', 'application/json')->withStatus(200);
 });
 
 $app->run();
+?>

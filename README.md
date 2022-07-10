@@ -7,6 +7,11 @@ This project is in a very early phase. If you'd like some particular endpoint or
 * `GET /items/:id`
 * `GET /items/:id/screenshot`
 * `GET /items?name=:name`
-* `GET /items?name=:name&match=fuzzy`
+* `GET /items?match=fuzzy&name=:name`
+
+* `GET /spells/:id`
+* `GET /spells/:id/screenshot`
+* `GET /spells?name=:name`
+* `GET /spells?match=fuzzy&name=:name`
 
 Feel free to use it. It's available at https://dom5api.illwiki.com/
