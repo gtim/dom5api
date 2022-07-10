@@ -80,7 +80,6 @@ const fs = require('fs');
 	const stmt_insert_spell = db.prepare("INSERT INTO spells (id, name, gemcost, mpath, type, school, researchlevel ) VALUES ($id, $name, $gemcost, $mpath, $type, $school, $researchlevel)");
 	const schools = ['Conjuration','Alteration','Evocation','Construction','Enchantment','Thaumaturgy','Blood','Divine'];
 	for ( const spell of spells ) {
-		console.log('inserting spell ' + spell.id + ': ' + spell.name );
 		stmt_insert_spell.run({
 			$id: spell.id,
 			$name: spell.name,
@@ -93,6 +92,44 @@ const fs = require('fs');
 	}
 	stmt_insert_spell.finalize();
 	db.close();
+
+	/*
+	 * Commanders
+	 */
+	
+	// regenerate commanders sqlite table
+	const db = new sqlite3.Database('../data/commanders.db' ).serialize();
+	db.run("DROP TABLE IF EXISTS commanders");
+	db.run( fs.readFileSync('commanders.sql').toString() );
+	
+	// Get commanders array from inspector
+	const units = await page.evaluate(_ => {
+		return Promise.resolve(
+			DMI.modctx.unitdata
+				.filter( unit => unit.type == "c" )
+				.filter( unit => Number.isInteger( unit.id ) ) // skip inspector-"duplicated" units, e.g. #443.02, for summons and occasionally multiple nations
+				.map( unit => { return {
+					id: unit.id,
+					name: unit.fullname,
+					hp: unit.hp,
+					size: unit.size
+				}; })
+		);
+	} );
+	
+	// Store commanders in sqlite table
+	const stmt_insert_unit = db.prepare("INSERT INTO commanders (id, name, hp, size) VALUES ($id, $name, $hp, $size)");
+	for ( const unit of units ) {
+		stmt_insert_unit.run({
+			$id: unit.id,
+			$name: unit.name,
+			$hp: unit.hp,
+			$size: unit.size
+		});
+	}
+	stmt_insert_unit.finalize();
+	db.close();
+
 
 
 	await browser.close();
