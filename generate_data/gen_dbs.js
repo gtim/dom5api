@@ -106,7 +106,7 @@ const fs = require('fs');
 	const units = await page.evaluate(_ => {
 		return Promise.resolve(
 			DMI.modctx.unitdata
-				.filter( unit => unit.type == "c" )
+				.filter( unit => unit.type == "c" || unit.typechar == "Pretender" )
 				.filter( unit => Number.isInteger( unit.id ) ) // skip inspector-"duplicated" units, e.g. #443.02, for summons and occasionally multiple nations
 				.map( unit => { return {
 					id: unit.id,
