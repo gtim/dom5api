@@ -14,4 +14,9 @@ This project is in a very early phase. If you'd like some particular endpoint or
 * `GET /spells?name=:name`
 * `GET /spells?match=fuzzy&name=:name`
 
+* `GET /commanders/:id`
+* `GET /commanders/:id/screenshot`
+* `GET /commanders?name=:name`
+* `GET /commanders?match=fuzzy&name=:name`
+
 Feel free to use it. It's available at https://dom5api.illwiki.com/
