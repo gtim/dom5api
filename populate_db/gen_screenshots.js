@@ -1,7 +1,7 @@
 /*
  * gen_screenshots.js
  *
- * Generate screenshots of dom5inspector popups for all items, spells, units and events.
+ * Generate screenshots of dom5inspector popups for all items, spells, units, sites, mercenaries and events.
  *
  * Expects dom5inspector running at localhost:8000.
  */
@@ -16,7 +16,7 @@ const puppeteer = require('puppeteer');
 	await page.$('#page-tabs');
 
 
-	for ( const type of ['item', 'spell', 'unit', 'event'] ) {
+	for ( const type of ['item', 'spell', 'unit', 'site', 'merc', 'event'] ) {
 
 		// Go to correct tab
 		await page.evaluate( (type) => { $('#'+type+'-page-button').trigger('click'); }, type );
