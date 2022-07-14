@@ -21,19 +21,28 @@ const fs = require('fs');
 	await page.$('#page-tabs');
 	await new Promise(r => setTimeout(r, 500));
 
-	/*
-	 * Items
-	 */
+	await populate_items_db(page);
 
-	// regenerate items sqlite table
+	await populate_spells_db(page);
+
+	await populate_commanders_db(page);
+
+	await browser.close();
+
+})();
+
+/*
+ * Items
+ */
+
+async function populate_items_db( page ) {
+	// Re-generate items sqlite table
 	const db = new sqlite3.Database('../data/items.db' ).serialize();
 	db.run("DROP TABLE IF EXISTS items");
 	db.run( fs.readFileSync('items.sql').toString() );
-
 	// Get items array from inspector
 	const items = await page.evaluate(_ => { return Promise.resolve( DMI.modctx.itemdata ) } );
-
-	// Store items in sqlite table
+	// Populate items sqlite table
 	const stmt_insert_item = db.prepare("INSERT INTO items (id, name, type, constlevel, mainlevel, mpath, gemcost ) VALUES ($id, $name, $type, $constlevel, $mainlevel, $mpath, $gemcost)");
 	for ( const item of items ) {
 		stmt_insert_item.run({
@@ -48,91 +57,66 @@ const fs = require('fs');
 	}
 	stmt_insert_item.finalize();
 	db.close();
+}
 
+/*
+ * Spells
+ */
 
-	/*
-	 * Spells
-	 */
-	
-	// regenerate spells sqlite table
+async function populate_spells_db( page ) {
 	const db = new sqlite3.Database('../data/spells.db' ).serialize();
 	db.run("DROP TABLE IF EXISTS spells");
 	db.run( fs.readFileSync('spells.sql').toString() );
-	
-	// Get spells array from inspector
 	const spells = await page.evaluate(_ => {
 		return Promise.resolve(
 			DMI.modctx.spelldata
 				.filter( spell => spell.research != "unresearchable" )
 				.map( spell => { return {
-					id: spell.id,
-					name: spell.name,
-					gemcost: spell.gemcost || '',
-					mpath: spell.mpath,
-					type: spell.type,
-					school: spell.school,
-					researchlevel: spell.researchlevel
+					$id: spell.id,
+					$name: spell.name,
+					$gemcost: spell.gemcost || '',
+					$mpath: spell.mpath,
+					$type: spell.type,
+					$school: spell.school,
+					$researchlevel: spell.researchlevel
 				}; })
 		);
 	} );
-	
-	// Store spells in sqlite table
-	const stmt_insert_spell = db.prepare("INSERT INTO spells (id, name, gemcost, mpath, type, school, researchlevel ) VALUES ($id, $name, $gemcost, $mpath, $type, $school, $researchlevel)");
 	const schools = ['Conjuration','Alteration','Evocation','Construction','Enchantment','Thaumaturgy','Blood','Divine'];
+	spells.forEach( spell => spell.$school = schools[spell.$school] );
+	const stmt_insert_spell = db.prepare("INSERT INTO spells (id, name, gemcost, mpath, type, school, researchlevel ) VALUES ($id, $name, $gemcost, $mpath, $type, $school, $researchlevel)");
 	for ( const spell of spells ) {
-		stmt_insert_spell.run({
-			$id: spell.id,
-			$name: spell.name,
-			$mpath: spell.mpath,
-			$gemcost: spell.gemcost,
-			$type: spell.type,
-			$school: schools[spell.school],
-			$researchlevel: spell.researchlevel
-		});
+		stmt_insert_spell.run( spell );
 	}
 	stmt_insert_spell.finalize();
 	db.close();
+}
 
-	/*
-	 * Commanders
-	 */
-	
-	// regenerate commanders sqlite table
+/*
+ * Commanders
+ */
+
+async function populate_commanders_db( page ) {
 	const db = new sqlite3.Database('../data/commanders.db' ).serialize();
 	db.run("DROP TABLE IF EXISTS commanders");
 	db.run( fs.readFileSync('commanders.sql').toString() );
-	
-	// Get commanders array from inspector
 	const units = await page.evaluate(_ => {
 		return Promise.resolve(
 			DMI.modctx.unitdata
 				.filter( unit => unit.type == "c" || unit.typechar == "Pretender" )
 				.filter( unit => Number.isInteger( unit.id ) ) // skip inspector-"duplicated" units, e.g. #443.02, for summons and occasionally multiple nations
 				.map( unit => { return {
-					id: unit.id,
-					name: unit.fullname,
-					hp: unit.hp,
-					size: unit.size
+					$id: unit.id,
+					$name: unit.fullname,
+					$hp: unit.hp,
+					$size: unit.size
 				}; })
 		);
 	} );
-	
-	// Store commanders in sqlite table
 	const stmt_insert_unit = db.prepare("INSERT INTO commanders (id, name, hp, size) VALUES ($id, $name, $hp, $size)");
 	for ( const unit of units ) {
-		stmt_insert_unit.run({
-			$id: unit.id,
-			$name: unit.name,
-			$hp: unit.hp,
-			$size: unit.size
-		});
+		stmt_insert_unit.run( unit );
 	}
 	stmt_insert_unit.finalize();
 	db.close();
-
-
-
-	await browser.close();
-
-})();
-
+}
