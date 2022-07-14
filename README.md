@@ -19,4 +19,14 @@ This project is in a very early phase. If you'd like some particular endpoint or
 * `GET /commanders?name=:name`
 * `GET /commanders?match=fuzzy&name=:name`
 
+* `GET /sites/:id`
+* `GET /sites/:id/screenshot`
+* `GET /sites?name=:name`
+* `GET /sites?match=fuzzy&name=:name`
+
+* `GET /mercs/:id`
+* `GET /mercs/:id/screenshot`
+* `GET /mercs?name=:name`
+* `GET /mercs?match=fuzzy&name=:name`
+
 Feel free to use it. It's available at https://dom5api.illwiki.com/

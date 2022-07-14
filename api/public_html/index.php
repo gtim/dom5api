@@ -10,9 +10,11 @@ $app = AppFactory::create();
 $middleware = $app->addErrorMiddleware(true,true,true);
 
 $app->get( '/', function( Request $request, Response $response, $args ) {
-	$response->getBody()->write("Hello world!");
+	$response->getBody()->write("Hello world!"); # TODO
 	return $response;
 });
+
+# TODO: deduplicate code
 
 
 
@@ -151,6 +153,98 @@ $app->get( '/commanders', function( Request $request, Response $response, array 
 		$items = Commander::entities_with_name( $params['name'] );
 	}
 	$data = array( 'commanders' => $items );
+	$response->getBody()->write( json_encode( $data, JSON_UNESCAPED_SLASHES ) );
+	return $response->withHeader('Content-Type', 'application/json')->withStatus(200);
+});
+
+#
+# /sites/{id}
+# 
+
+$app->get( '/sites/{id:[0-9]+}', function( Request $request, Response $response, array $args ) {
+	require_once('inc/Site.php');
+	$item = Site::from_id( $args['id'] );
+	if ($item) {
+		$response->getBody()->write(
+			json_encode( $item, JSON_UNESCAPED_SLASHES )
+		);
+		return $response->withHeader('Content-Type', 'application/json')->withStatus(200);
+	} else {
+		return $response->withHeader('Content-Type', 'application/json')->withStatus(404);
+	}
+});
+#
+# /sites?name=...
+# /sites?name=...&match=fuzzy
+#
+# returns array of matching sites 
+#
+
+$app->get( '/sites', function( Request $request, Response $response, array $args ) {
+	$params = $request->getQueryParams();
+
+	# ensure name query parameter was supplied
+	if ( ! array_key_exists( 'name', $params ) ) {
+		$response->getBody()->write( json_encode( [ 'errors' => [ [
+			'title' => 'Query parameter "name" not specified'
+		] ] ] ) );
+		return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
+	} 
+
+	require_once('inc/Site.php');
+
+	if ( array_key_exists( 'match', $params ) && $params['match'] == 'fuzzy' ) {
+		$items = Site::entities_with_similar_name( $params['name'], $similarity );
+	} else {
+		$items = Site::entities_with_name( $params['name'] );
+	}
+	$data = array( 'sites' => $items );
+	$response->getBody()->write( json_encode( $data, JSON_UNESCAPED_SLASHES ) );
+	return $response->withHeader('Content-Type', 'application/json')->withStatus(200);
+});
+
+#
+# /mercs/{id}
+# 
+
+$app->get( '/mercs/{id:[0-9]+}', function( Request $request, Response $response, array $args ) {
+	require_once('inc/Merc.php');
+	$item = Merc::from_id( $args['id'] );
+	if ($item) {
+		$response->getBody()->write(
+			json_encode( $item, JSON_UNESCAPED_SLASHES )
+		);
+		return $response->withHeader('Content-Type', 'application/json')->withStatus(200);
+	} else {
+		return $response->withHeader('Content-Type', 'application/json')->withStatus(404);
+	}
+});
+#
+# /mercs?name=...
+# /mercs?name=...&match=fuzzy
+#
+# returns array of matching mercs 
+#
+
+$app->get( '/mercs', function( Request $request, Response $response, array $args ) {
+	$params = $request->getQueryParams();
+
+	# ensure name query parameter was supplied
+	if ( ! array_key_exists( 'name', $params ) ) {
+		$response->getBody()->write( json_encode( [ 'errors' => [ [
+			'title' => 'Query parameter "name" not specified'
+		] ] ] ) );
+		return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
+	} 
+
+	require_once('inc/Merc.php');
+
+	if ( array_key_exists( 'match', $params ) && $params['match'] == 'fuzzy' ) {
+		$items = Merc::entities_with_similar_name( $params['name'], $similarity );
+	} else {
+		$items = Merc::entities_with_name( $params['name'] );
+	}
+	$data = array( 'mercs' => $items );
 	$response->getBody()->write( json_encode( $data, JSON_UNESCAPED_SLASHES ) );
 	return $response->withHeader('Content-Type', 'application/json')->withStatus(200);
 });
