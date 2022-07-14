@@ -1,7 +1,7 @@
 /*
  * populate_dbs.js
  *
- * Populate sqlite3 databases of all items, spells and commanders.
+ * Populate sqlite3 databases of all items, spells, commanders, mercs and sites.
  *
  * Expects dom5inspector running at localhost:8000.
  */
@@ -26,6 +26,10 @@ const fs = require('fs');
 	await populate_spells_db(page);
 
 	await populate_commanders_db(page);
+	
+	await populate_mercs_db(page);
+
+	await populate_sites_db(page);
 
 	await browser.close();
 
@@ -118,5 +122,62 @@ async function populate_commanders_db( page ) {
 		stmt_insert_unit.run( unit );
 	}
 	stmt_insert_unit.finalize();
+	db.close();
+}
+
+/*
+ * Mercs
+ */
+
+async function populate_mercs_db( page ) {
+	const db = new sqlite3.Database('../data/mercs.db' ).serialize();
+	db.run("DROP TABLE IF EXISTS mercs");
+	db.run( fs.readFileSync('mercs.sql').toString() );
+	const mercs = await page.evaluate(_ => {
+		return Promise.resolve(
+			DMI.modctx.mercdata.map( merc => { return {
+				$id: merc.id,
+				$name: merc.name,
+				$bossname: merc.bossname,
+				$commander_id: merc.com,
+				$unit_id: merc.unit,
+				$nrunits: merc.nrunits
+			}; })
+		);
+	} );
+	const stmt_insert_merc = db.prepare("INSERT INTO mercs (id, name, bossname, commander_id, unit_id, nrunits) VALUES ($id, $name, $bossname, $commander_id, $unit_id, $nrunits)");
+	for ( const merc of mercs ) {
+		stmt_insert_merc.run( merc );
+	}
+	stmt_insert_merc.finalize();
+	db.close();
+}
+
+/*
+ * Sites
+ */
+
+async function populate_sites_db( page ) {
+	const db = new sqlite3.Database('../data/sites.db' ).serialize();
+	db.run("DROP TABLE IF EXISTS sites");
+	db.run( fs.readFileSync('sites.sql').toString() );
+	const sites = await page.evaluate(_ => {
+		return Promise.resolve(
+			DMI.modctx.sitedata.map( site => { return {
+				$id: site.id,
+				$name: site.name,
+				$path: site.path,
+				$level: site.level,
+				$rarity: site.rarity,
+			}; })
+		);
+	} );
+	const rarities = { 0: 'Common', 1: 'Uncommon', 2: 'Rare', 5: 'Never random', 11: 'Throne lvl1', 12: 'Throne lvl2', 13: 'Throne lvl3' };
+	sites.forEach( site => site.$rarity = rarities[site.$rarity] );
+	const stmt_insert_site = db.prepare("INSERT INTO sites (id, name, path, level, rarity) VALUES ($id, $name, $path, $level, $rarity)");
+	for ( const site of sites ) {
+		stmt_insert_site.run( site );
+	}
+	stmt_insert_site.finalize();
 	db.close();
 }
