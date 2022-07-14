@@ -1,7 +1,7 @@
 /*
- * gen_dbs.js
+ * populate_dbs.js
  *
- * Generate sqlite3 databases of all items and spells.
+ * Populate sqlite3 databases of all items, spells and commanders.
  *
  * Expects dom5inspector running at localhost:8000.
  */
