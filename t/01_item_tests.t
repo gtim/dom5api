@@ -1,14 +1,10 @@
 #!/usr/bin/perl -w
 
 #
-# run_api_test.pl
+# 01_item_tests.t
 #
-# Runs a test suite against the live API.
+# Test /items endpoint of the live API.
 #
-# Tests to write:
-# - ensure screenshot URL is returned
-# - ensure screenshot is a PNG image
-# - /spells endpoints
 
 use 5.34.0;
 use utf8;

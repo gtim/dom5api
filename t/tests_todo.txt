@@ -1,0 +1,9 @@
+Tests to write:
+
+- items:
+  * ensure screenshot URL is returned
+  * ensure screenshot is a PNG image
+- spells
+- mercs
+- sites
+- commanders
