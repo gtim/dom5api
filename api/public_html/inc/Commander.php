@@ -1,10 +1,9 @@
 <?
 
-require_once('Entity.php');
+require_once('Unit.php');
 
-class Commander extends Entity implements JsonSerializable {
+class Commander extends Unit implements JsonSerializable {
 
-	protected static $Field_Names = array( 'id', 'name', 'hp', 'size' );
 	protected static $Table_Name = 'commanders';
 
 }

@@ -112,6 +112,52 @@ $app->get( '/spells', function( Request $request, Response $response, array $arg
 });
 
 #
+# /units/{id}
+# 
+
+$app->get( '/units/{id:[0-9]+}', function( Request $request, Response $response, array $args ) {
+	require_once('inc/Unit.php');
+	$item = Unit::from_id( $args['id'] );
+	if ($item) {
+		$response->getBody()->write(
+			json_encode( $item, JSON_UNESCAPED_SLASHES )
+		);
+		return $response->withHeader('Content-Type', 'application/json')->withStatus(200);
+	} else {
+		return $response->withHeader('Content-Type', 'application/json')->withStatus(404);
+	}
+});
+#
+# /units?name=...
+# /units?name=...&match=fuzzy
+#
+# returns array of matching units 
+#
+
+$app->get( '/units', function( Request $request, Response $response, array $args ) {
+	$params = $request->getQueryParams();
+
+	# ensure name query parameter was supplied
+	if ( ! array_key_exists( 'name', $params ) ) {
+		$response->getBody()->write( json_encode( [ 'errors' => [ [
+			'title' => 'Query parameter "name" not specified'
+		] ] ] ) );
+		return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
+	} 
+
+	require_once('inc/Unit.php');
+
+	if ( array_key_exists( 'match', $params ) && $params['match'] == 'fuzzy' ) {
+		$items = Unit::entities_with_similar_name( $params['name'], $similarity );
+	} else {
+		$items = Unit::entities_with_name( $params['name'] );
+	}
+	$data = array( 'units' => $items );
+	$response->getBody()->write( json_encode( $data, JSON_UNESCAPED_SLASHES ) );
+	return $response->withHeader('Content-Type', 'application/json')->withStatus(200);
+});
+
+#
 # /commanders/{id}
 # 
 
