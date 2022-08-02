@@ -26,7 +26,7 @@ const fs = require('fs');
 	await populate_spells_db(page);
 
 	await populate_commanders_db(page);
-	
+
 	await populate_mercs_db(page);
 
 	await populate_sites_db(page);
@@ -107,8 +107,12 @@ async function populate_commanders_db( page ) {
 	const units = await page.evaluate(_ => {
 		return Promise.resolve(
 			DMI.modctx.unitdata
-				.filter( unit => unit.type == "c" || unit.typechar == "Pretender" || unit.typechar == "cmdr (Summon)" )
-				.filter( unit => Number.isInteger( unit.id ) ) // skip inspector-"duplicated" units, e.g. #443.02, for summons and occasionally multiple nations
+				.filter( unit =>
+					unit.type == "c"
+					|| unit.typechar == "Pretender"
+					|| unit.typechar == "Commander"
+					|| unit.typechar !== undefined && unit.typechar.startsWith("cmdr")
+				).filter( unit => Number.isInteger( unit.id ) ) // skip inspector-"duplicated" units, e.g. #443.02, for summons and occasionally multiple nations
 				.map( unit => { return {
 					$id: unit.id,
 					$name: unit.fullname,
