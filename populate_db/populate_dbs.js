@@ -1,7 +1,7 @@
 /*
  * populate_dbs.js
  *
- * Populate sqlite3 databases of all items, spells, commanders, mercs and sites.
+ * Populate sqlite3 databases of all items, spells, commanders, units, mercs and sites.
  *
  * Expects dom5inspector running at localhost:8000.
  */
@@ -22,13 +22,10 @@ const fs = require('fs');
 	await new Promise(r => setTimeout(r, 500));
 
 	await populate_items_db(page);
-
 	await populate_spells_db(page);
-
 	await populate_commanders_db(page);
-
+	await populate_units_db(page);
 	await populate_mercs_db(page);
-
 	await populate_sites_db(page);
 
 	await browser.close();
@@ -122,6 +119,35 @@ async function populate_commanders_db( page ) {
 		);
 	} );
 	const stmt_insert_unit = db.prepare("INSERT INTO commanders (id, name, hp, size) VALUES ($id, $name, $hp, $size)");
+	for ( const unit of units ) {
+		stmt_insert_unit.run( unit );
+	}
+	stmt_insert_unit.finalize();
+	db.close();
+}
+
+/*
+ * Units
+ */
+
+async function populate_units_db( page ) {
+	// TODO: commanders and units use the same table structure and should be combined
+	const db = new sqlite3.Database('../data/units.db' ).serialize();
+	db.run("DROP TABLE IF EXISTS units");
+	db.run( fs.readFileSync('units.sql').toString() );
+	const units = await page.evaluate(_ => {
+		return Promise.resolve(
+			DMI.modctx.unitdata
+				.filter( unit => Number.isInteger( unit.id ) ) // skip inspector-"duplicated" units
+				.map( unit => { return {
+					$id: unit.id,
+					$name: unit.fullname,
+					$hp: unit.hp,
+					$size: unit.size
+				}; })
+		);
+	} );
+	const stmt_insert_unit = db.prepare("INSERT INTO units (id, name, hp, size) VALUES ($id, $name, $hp, $size)");
 	for ( const unit of units ) {
 		stmt_insert_unit.run( unit );
 	}
