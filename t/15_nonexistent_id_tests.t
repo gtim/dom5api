@@ -1,9 +1,9 @@
 #!/usr/bin/perl -w
 
 #
-# 10_entity_properties_tests.t
+# 15_nonexistent_id_tests.t
 #
-# Test properties of all entity types.
+# Ensure invalid IDs return 404.
 #
 
 use 5.34.0;
