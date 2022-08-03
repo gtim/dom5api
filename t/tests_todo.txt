@@ -1,5 +1,6 @@
 Tests to write:
 
+- fuzzy name matching
 - items:
   * ensure screenshot URL is returned
   * ensure screenshot is a PNG image
@@ -7,3 +8,4 @@ Tests to write:
 - mercs
 - sites
 - commanders
+- units

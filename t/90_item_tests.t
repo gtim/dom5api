@@ -1,10 +1,11 @@
 #!/usr/bin/perl -w
 
 #
-# 01_item_tests.t
+# 90_item_tests.t
 #
-# Test /items endpoint of the live API.
+# Test /items endpoints.
 #
+# Mostly old tests superceded by others.
 
 use 5.34.0;
 use utf8;
