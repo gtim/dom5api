@@ -10,4 +10,3 @@ class Spell extends Entity implements JsonSerializable {
 }
 
 ?>
-
