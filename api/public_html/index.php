@@ -19,7 +19,7 @@ $middleware = $app->addErrorMiddleware(true,true,true);
 # /mercs/{id}
 # 
 
-function gen_route_callback_get_by_id( string $class) {
+function gen_route_callback_get_by_id( string $class ) {
 	return function( Request $request, Response $response, array $args ) use($class) {
 		require_once("inc/$class.php");
 		$entity = $class::from_id( $args['id'] );
@@ -44,183 +44,44 @@ $app->get( "/mercs/{id:[0-9]+}",      gen_route_callback_get_by_id('Merc') );
 #
 # /items?name=...
 # /items?name=...&match=fuzzy
+# and corresponding for spells, commanders, units, sites and mercs.
 #
 # returns array of matching items 
 #
 
-$app->get( '/items', function( Request $request, Response $response, array $args ) {
-	$params = $request->getQueryParams();
+function gen_route_callback_get_by_name( string $class, string $category ) {
+	# e.g. class: "Item", category: "items"
+	return function( Request $request, Response $response, array $args ) use($class,$category) {
+		$params = $request->getQueryParams();
 
-	# ensure name query parameter was supplied
-	if ( ! array_key_exists( 'name', $params ) ) {
-		$response->getBody()->write( json_encode( [ 'errors' => [ [
-			'title' => 'Query parameter "name" not specified'
-		] ] ] ) );
-		return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
-	} 
+		# ensure name query parameter was supplied
+		if ( ! array_key_exists( 'name', $params ) ) {
+			$response->getBody()->write( json_encode( [ 'errors' => [ [
+				'title' => 'Query parameter "name" not specified'
+			] ] ] ) );
+			return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
+		} 
 
-	require_once('inc/Item.php');
+		require_once("inc/$class.php");
 
-	if ( array_key_exists( 'match', $params ) && $params['match'] == 'fuzzy' ) {
-		$items = Item::entities_with_similar_name( $params['name'], $similarity );
-	} else {
-		$items = Item::entities_with_name( $params['name'] );
-	}
-	$data = array( 'items' => $items );
-	$response->getBody()->write( json_encode( $data, JSON_UNESCAPED_SLASHES ) );
-	return $response->withHeader('Content-Type', 'application/json')->withStatus(200);
-});
+		if ( array_key_exists( 'match', $params ) && $params['match'] == 'fuzzy' ) {
+			$items = $class::entities_with_similar_name( $params['name'], $similarity );
+		} else {
+			$items = $class::entities_with_name( $params['name'] );
+		}
+		$data = array( $category => $items );
+		$response->getBody()->write( json_encode( $data, JSON_UNESCAPED_SLASHES ) );
+		return $response->withHeader('Content-Type', 'application/json')->withStatus(200);
+	};
+}
 
-#
-# /spells?name=...
-# /spells?name=...&match=fuzzy
-#
-# returns array of matching spells 
-#
 
-$app->get( '/spells', function( Request $request, Response $response, array $args ) {
-	$params = $request->getQueryParams();
-
-	# ensure name query parameter was supplied
-	if ( ! array_key_exists( 'name', $params ) ) {
-		$response->getBody()->write( json_encode( [ 'errors' => [ [
-			'title' => 'Query parameter "name" not specified'
-		] ] ] ) );
-		return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
-	} 
-
-	require_once('inc/Spell.php');
-
-	if ( array_key_exists( 'match', $params ) && $params['match'] == 'fuzzy' ) {
-		$items = Spell::entities_with_similar_name( $params['name'], $similarity );
-	} else {
-		$items = Spell::entities_with_name( $params['name'] );
-	}
-	$data = array( 'spells' => $items );
-	$response->getBody()->write( json_encode( $data, JSON_UNESCAPED_SLASHES ) );
-	return $response->withHeader('Content-Type', 'application/json')->withStatus(200);
-});
-
-#
-# /units?name=...
-# /units?name=...&match=fuzzy
-#
-# returns array of matching units 
-#
-
-$app->get( '/units', function( Request $request, Response $response, array $args ) {
-	$params = $request->getQueryParams();
-
-	# ensure name query parameter was supplied
-	if ( ! array_key_exists( 'name', $params ) ) {
-		$response->getBody()->write( json_encode( [ 'errors' => [ [
-			'title' => 'Query parameter "name" not specified'
-		] ] ] ) );
-		return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
-	} 
-
-	require_once('inc/Unit.php');
-
-	if ( array_key_exists( 'match', $params ) && $params['match'] == 'fuzzy' ) {
-		$items = Unit::entities_with_similar_name( $params['name'], $similarity );
-	} else {
-		$items = Unit::entities_with_name( $params['name'] );
-	}
-	$data = array( 'units' => $items );
-	$response->getBody()->write( json_encode( $data, JSON_UNESCAPED_SLASHES ) );
-	return $response->withHeader('Content-Type', 'application/json')->withStatus(200);
-});
-
-#
-# /commanders?name=...
-# /commanders?name=...&match=fuzzy
-#
-# returns array of matching commanders 
-#
-
-$app->get( '/commanders', function( Request $request, Response $response, array $args ) {
-	$params = $request->getQueryParams();
-
-	# ensure name query parameter was supplied
-	if ( ! array_key_exists( 'name', $params ) ) {
-		$response->getBody()->write( json_encode( [ 'errors' => [ [
-			'title' => 'Query parameter "name" not specified'
-		] ] ] ) );
-		return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
-	} 
-
-	require_once('inc/Commander.php');
-
-	if ( array_key_exists( 'match', $params ) && $params['match'] == 'fuzzy' ) {
-		$items = Commander::entities_with_similar_name( $params['name'], $similarity );
-	} else {
-		$items = Commander::entities_with_name( $params['name'] );
-	}
-	$data = array( 'commanders' => $items );
-	$response->getBody()->write( json_encode( $data, JSON_UNESCAPED_SLASHES ) );
-	return $response->withHeader('Content-Type', 'application/json')->withStatus(200);
-});
-
-#
-# /sites?name=...
-# /sites?name=...&match=fuzzy
-#
-# returns array of matching sites 
-#
-
-$app->get( '/sites', function( Request $request, Response $response, array $args ) {
-	$params = $request->getQueryParams();
-
-	# ensure name query parameter was supplied
-	if ( ! array_key_exists( 'name', $params ) ) {
-		$response->getBody()->write( json_encode( [ 'errors' => [ [
-			'title' => 'Query parameter "name" not specified'
-		] ] ] ) );
-		return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
-	} 
-
-	require_once('inc/Site.php');
-
-	if ( array_key_exists( 'match', $params ) && $params['match'] == 'fuzzy' ) {
-		$items = Site::entities_with_similar_name( $params['name'], $similarity );
-	} else {
-		$items = Site::entities_with_name( $params['name'] );
-	}
-	$data = array( 'sites' => $items );
-	$response->getBody()->write( json_encode( $data, JSON_UNESCAPED_SLASHES ) );
-	return $response->withHeader('Content-Type', 'application/json')->withStatus(200);
-});
-
-#
-# /mercs?name=...
-# /mercs?name=...&match=fuzzy
-#
-# returns array of matching mercs 
-#
-
-$app->get( '/mercs', function( Request $request, Response $response, array $args ) {
-	$params = $request->getQueryParams();
-
-	# ensure name query parameter was supplied
-	if ( ! array_key_exists( 'name', $params ) ) {
-		$response->getBody()->write( json_encode( [ 'errors' => [ [
-			'title' => 'Query parameter "name" not specified'
-		] ] ] ) );
-		return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
-	} 
-
-	require_once('inc/Merc.php');
-
-	if ( array_key_exists( 'match', $params ) && $params['match'] == 'fuzzy' ) {
-		$items = Merc::entities_with_similar_name( $params['name'], $similarity );
-	} else {
-		$items = Merc::entities_with_name( $params['name'] );
-	}
-	$data = array( 'mercs' => $items );
-	$response->getBody()->write( json_encode( $data, JSON_UNESCAPED_SLASHES ) );
-	return $response->withHeader('Content-Type', 'application/json')->withStatus(200);
-});
-
+$app->get( '/items',      gen_route_callback_get_by_name( 'Item', 'items' ) );
+$app->get( '/spells',     gen_route_callback_get_by_name( 'Spell', 'spells' ) );
+$app->get( '/commanders', gen_route_callback_get_by_name( 'Commander', 'commanders' ) );
+$app->get( '/units',      gen_route_callback_get_by_name( 'Unit', 'units' ) );
+$app->get( '/sites',      gen_route_callback_get_by_name( 'Site', 'sites' ) );
+$app->get( '/mercs',      gen_route_callback_get_by_name( 'Merc', 'mercs' ) );
 
 $app->run();
 ?>
