@@ -2,6 +2,8 @@ package Test::Utils;
 
 use utf8;
 
+our $host = 'dom5api.illwiki.com';
+
 our @sample_entities = (
 	# Items
 	{ category => 'items', id =>   1, name => 'Fire Sword',          type => '1-h wpn', constlevel => 0,  mainlevel => 1, mpath => 'F1',   gemcost => '5F'    },

@@ -3,7 +3,6 @@ Tests to write:
 
 - ensure screenshot URL is returned
 - ensure screenshot is a PNG image
-- 404s, invalid IDs
 - search by exact name
 - result counts for exact, non-existent and duplicate names
 - fuzzy name matching
