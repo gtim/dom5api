@@ -63,9 +63,9 @@ for my $category ( keys %fuzzy_matches ) {
 		$url->query_form( name => $search, match => 'fuzzy' );
 		my $req = HTTP::Request->new( GET => $url );
 		my $res = $ua->request($req);
-		is( $res->code, 200, "$url" );
+		is( $res->code, 200, "GET $url" );
 		my $entities = ( decode_json( $res->content ) )->{$category};
-		is( $entities->[0]{name}, $expected_name, '  name matches ' );
+		is( $entities->[0]{name}, $expected_name, "fuzzy search \"$search\" matches" );
 	}
 }
 
