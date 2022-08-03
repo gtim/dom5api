@@ -9,26 +9,37 @@ $app = AppFactory::create();
 
 $middleware = $app->addErrorMiddleware(true,true,true);
 
-# TODO: deduplicate code
-
-
 
 #
 # /items/{id}
+# /spells/{id}
+# /commanders/{id}
+# /units/{id}
+# /sites/{id}
+# /mercs/{id}
 # 
 
-$app->get( '/items/{id:[0-9]+}', function( Request $request, Response $response, array $args ) {
-	require_once('inc/Item.php');
-	$item = Item::from_id( $args['id'] );
-	if ($item) {
-		$response->getBody()->write(
-			json_encode( $item, JSON_UNESCAPED_SLASHES )
-		);
-		return $response->withHeader('Content-Type', 'application/json')->withStatus(200);
-	} else {
-		return $response->withHeader('Content-Type', 'application/json')->withStatus(404);
-	}
-});
+function gen_route_callback_get_by_id( string $class) {
+	return function( Request $request, Response $response, array $args ) use($class) {
+		require_once("inc/$class.php");
+		$entity = $class::from_id( $args['id'] );
+		if ($entity) {
+			$response->getBody()->write(
+				json_encode( $entity, JSON_UNESCAPED_SLASHES )
+			);
+			return $response->withHeader('Content-Type', 'application/json')->withStatus(200);
+		} else {
+			return $response->withHeader('Content-Type', 'application/json')->withStatus(404);
+		}
+	};
+}
+
+$app->get( "/items/{id:[0-9]+}",      gen_route_callback_get_by_id('Item') );
+$app->get( "/spells/{id:[0-9]+}",     gen_route_callback_get_by_id('Spell') );
+$app->get( "/commanders/{id:[0-9]+}", gen_route_callback_get_by_id('Commander') );
+$app->get( "/units/{id:[0-9]+}",      gen_route_callback_get_by_id('Unit') );
+$app->get( "/sites/{id:[0-9]+}",      gen_route_callback_get_by_id('Site') );
+$app->get( "/mercs/{id:[0-9]+}",      gen_route_callback_get_by_id('Merc') );
 
 #
 # /items?name=...
@@ -61,22 +72,6 @@ $app->get( '/items', function( Request $request, Response $response, array $args
 });
 
 #
-# /spells/{id}
-# 
-
-$app->get( '/spells/{id:[0-9]+}', function( Request $request, Response $response, array $args ) {
-	require_once('inc/Spell.php');
-	$item = Spell::from_id( $args['id'] );
-	if ($item) {
-		$response->getBody()->write(
-			json_encode( $item, JSON_UNESCAPED_SLASHES )
-		);
-		return $response->withHeader('Content-Type', 'application/json')->withStatus(200);
-	} else {
-		return $response->withHeader('Content-Type', 'application/json')->withStatus(404);
-	}
-});
-#
 # /spells?name=...
 # /spells?name=...&match=fuzzy
 #
@@ -106,22 +101,6 @@ $app->get( '/spells', function( Request $request, Response $response, array $arg
 	return $response->withHeader('Content-Type', 'application/json')->withStatus(200);
 });
 
-#
-# /units/{id}
-# 
-
-$app->get( '/units/{id:[0-9]+}', function( Request $request, Response $response, array $args ) {
-	require_once('inc/Unit.php');
-	$item = Unit::from_id( $args['id'] );
-	if ($item) {
-		$response->getBody()->write(
-			json_encode( $item, JSON_UNESCAPED_SLASHES )
-		);
-		return $response->withHeader('Content-Type', 'application/json')->withStatus(200);
-	} else {
-		return $response->withHeader('Content-Type', 'application/json')->withStatus(404);
-	}
-});
 #
 # /units?name=...
 # /units?name=...&match=fuzzy
@@ -153,22 +132,6 @@ $app->get( '/units', function( Request $request, Response $response, array $args
 });
 
 #
-# /commanders/{id}
-# 
-
-$app->get( '/commanders/{id:[0-9]+}', function( Request $request, Response $response, array $args ) {
-	require_once('inc/Commander.php');
-	$item = Commander::from_id( $args['id'] );
-	if ($item) {
-		$response->getBody()->write(
-			json_encode( $item, JSON_UNESCAPED_SLASHES )
-		);
-		return $response->withHeader('Content-Type', 'application/json')->withStatus(200);
-	} else {
-		return $response->withHeader('Content-Type', 'application/json')->withStatus(404);
-	}
-});
-#
 # /commanders?name=...
 # /commanders?name=...&match=fuzzy
 #
@@ -199,22 +162,6 @@ $app->get( '/commanders', function( Request $request, Response $response, array 
 });
 
 #
-# /sites/{id}
-# 
-
-$app->get( '/sites/{id:[0-9]+}', function( Request $request, Response $response, array $args ) {
-	require_once('inc/Site.php');
-	$item = Site::from_id( $args['id'] );
-	if ($item) {
-		$response->getBody()->write(
-			json_encode( $item, JSON_UNESCAPED_SLASHES )
-		);
-		return $response->withHeader('Content-Type', 'application/json')->withStatus(200);
-	} else {
-		return $response->withHeader('Content-Type', 'application/json')->withStatus(404);
-	}
-});
-#
 # /sites?name=...
 # /sites?name=...&match=fuzzy
 #
@@ -244,22 +191,6 @@ $app->get( '/sites', function( Request $request, Response $response, array $args
 	return $response->withHeader('Content-Type', 'application/json')->withStatus(200);
 });
 
-#
-# /mercs/{id}
-# 
-
-$app->get( '/mercs/{id:[0-9]+}', function( Request $request, Response $response, array $args ) {
-	require_once('inc/Merc.php');
-	$item = Merc::from_id( $args['id'] );
-	if ($item) {
-		$response->getBody()->write(
-			json_encode( $item, JSON_UNESCAPED_SLASHES )
-		);
-		return $response->withHeader('Content-Type', 'application/json')->withStatus(200);
-	} else {
-		return $response->withHeader('Content-Type', 'application/json')->withStatus(404);
-	}
-});
 #
 # /mercs?name=...
 # /mercs?name=...&match=fuzzy
