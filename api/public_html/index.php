@@ -9,11 +9,6 @@ $app = AppFactory::create();
 
 $middleware = $app->addErrorMiddleware(true,true,true);
 
-$app->get( '/', function( Request $request, Response $response, $args ) {
-	$response->getBody()->write("Hello world!"); # TODO
-	return $response;
-});
-
 # TODO: deduplicate code
 
 
