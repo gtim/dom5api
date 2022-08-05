@@ -189,8 +189,17 @@ async function populate_mercs_db( page ) {
 
 async function populate_sites_db( page ) {
 	const db = new sqlite3.Database('../data/sites.db' ).serialize();
-	db.run("DROP TABLE IF EXISTS sites");
-	db.run( fs.readFileSync('sites.sql').toString() );
+
+	// Create tables
+	const queries = fs.readFileSync('sites.sql').toString()
+		.split(';') // split on semicolon, hacky and should be fixed if SQL contains ';'
+		.filter( (q) => /\S/.test(q) ); // remove empty strings (after last semicolon)
+	for ( const query of queries ) {
+		db.run(query);
+	}
+
+	// Sites table
+		
 	const sites = await page.evaluate(_ => {
 		return Promise.resolve(
 			DMI.modctx.sitedata.map( site => { return {
@@ -209,5 +218,34 @@ async function populate_sites_db( page ) {
 		stmt_insert_site.run( site );
 	}
 	stmt_insert_site.finalize();
+
+	// Site props table
+	
+	const stmt_insert_prop = db.prepare("INSERT INTO site_props (site_id, prop_name, value) VALUES ($id, $name, $value)");
+	const excluded_props = [
+		'id', 'name', 'path', 'level', 'rarity', // always present, included in sites table
+		'renderOverlay', 'matchProperty', 'searchable', 'listed_gempath', 'mpath2', // inspector internals/artifacts
+		'scale1', 'scale2', // included in composite property
+		'sprite', 'url' // probably not interesting
+	];
+	for ( let site_i = 0; site_i < sites.length; site_i++ ) {
+		// Can't grab the entire sitedata array in one go due to puppeteer limitations,
+		// so fetch them one at a time.
+		const props = await page.evaluate( (site_i) => {
+			return Promise.resolve( DMI.modctx.sitedata[site_i] );
+		}, site_i );
+		for ( const prop_name of Object.keys(props) ) {
+			if ( excluded_props.includes(prop_name) ) {
+				continue;
+			}
+			stmt_insert_prop.run( {
+				$id: props.id,
+				$name: prop_name,
+				$value: props[prop_name]
+			});
+		}
+	}
+	stmt_insert_prop.finalize();
+	
 	db.close();
 }
