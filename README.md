@@ -1,8 +1,7 @@
 # dom5api
 
-REST API for the excellent [dom5inspector](https://github.com/larzm42/dom5inspector) data for Dominions 5. Although this project is in an early phase, you are very welcome to use it. If you'd like some particular endpoint or other feature for whatever project you're working on, please let me know and I'll make sure to prioritise it. 
+REST API for Dominions 5 data via the [dom5inspector](https://github.com/larzm42/dom5inspector). Although this project is in an early phase, you are already welcome to use it. If you'd like some particular endpoint or other feature for whatever project you're working on, please let me know and I'll make sure to prioritise it. The API is available at [dom5api.illwiki.com](https://dom5api.illwiki.com/).
 
-The API is available at https://dom5api.illwiki.com/.
 
 ## Examples
 
