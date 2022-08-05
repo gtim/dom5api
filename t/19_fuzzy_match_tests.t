@@ -59,7 +59,7 @@ plan tests => 2 * sum map { 0 + values %$_ } values %fuzzy_matches;
 
 for my $category ( keys %fuzzy_matches ) {
 	while ( my ( $search, $expected_name ) = each %{$fuzzy_matches{$category}} ) {
-		my $url = URI->new("https://${Test::Utils::host}/$category");
+		my $url = URI->new("$Test::Utils::protocol://$Test::Utils::host/$category");
 		$url->query_form( name => $search, match => 'fuzzy' );
 		my $req = HTTP::Request->new( GET => $url );
 		my $res = $ua->request($req);

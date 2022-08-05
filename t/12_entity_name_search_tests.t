@@ -92,7 +92,7 @@ plan tests => 2 * sum map { 0 + keys %$_ } values %name_counts;
 
 for my $category ( keys %name_counts ) {
 	while ( my ( $name, $expected_count ) = each( %{ $name_counts{$category} } ) ) {
-		my $url = URI->new("https://${Test::Utils::host}/$category");
+		my $url = URI->new("$Test::Utils::protocol://$Test::Utils::host/$category");
 		$url->query_form( name => $name );
 		my $req = HTTP::Request->new( GET => $url );
 		my $res = $ua->request($req);

@@ -33,7 +33,7 @@ plan tests => sum map { 0 + @$_ } values %invalid_ids;
 
 for my $category ( keys %invalid_ids ) {
 	for my $id ( @{ $invalid_ids{$category} } ) {
-		my $url = sprintf( 'https://%s/%s/%s', $Test::Utils::host, $category, $id );
+		my $url = "$Test::Utils::protocol://$Test::Utils::host/$category/$id";
 		my $req = HTTP::Request->new( GET => $url );
 		my $res = $ua->request($req);
 		is( $res->code, 404, "non-existent at $url" );

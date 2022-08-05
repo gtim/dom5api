@@ -5,7 +5,7 @@
 #
 # Test /items endpoints.
 #
-# Mostly old tests superceded by others.
+# Old tests superceded by others.
 
 use 5.34.0;
 use utf8;
@@ -14,7 +14,12 @@ use LWP::UserAgent;
 use URI;
 use JSON 'decode_json';
 
-my $host = 'dom5api.illwiki.com';
+use FindBin qw( $RealBin );
+use lib "$RealBin/lib";
+use Test::Utils;
+
+my $protocol = $Test::Utils::protocol;
+my $host = $Test::Utils::host;
 my $ua = LWP::UserAgent->new;
 
 my @test_items = (
@@ -60,7 +65,7 @@ plan tests => $num_id_tests + $num_name_tests + $num_fuzzy_name_tests;
 
 for my $expected ( @test_items ) {
 	my $item_id = $expected->{id};
-	my $url = "https://$host/items/$item_id";
+	my $url = "$protocol://$host/items/$item_id";
 	my $req = HTTP::Request->new(GET => $url);
 	my $res = $ua->request($req);
 
@@ -74,7 +79,7 @@ for my $expected ( @test_items ) {
 # Non-existent item IDs
 
 for my $item_id ( 446, 500, 1e6, 2**50, -1, 0 ) {
-	my $url = sprintf( 'https://%s/items/%.0f', $host, $item_id );
+	my $url = sprintf( '%s://%s/items/%.0f', $protocol, $host, $item_id );
 	my $req = HTTP::Request->new( GET => $url );
 	my $res = $ua->request($req);
 	is( $res->code, 404, "non-existent item $url" );
@@ -90,7 +95,7 @@ for my $item_id ( 446, 500, 1e6, 2**50, -1, 0 ) {
 # Ensure some sample items give correct properties
 
 for my $expected ( @test_items ) {
-	my $uri = URI->new("https://$host/items");
+	my $uri = URI->new("$protocol://$host/items");
 	$uri->query_form( name => $expected->{name} );
 	my $req = HTTP::Request->new(GET => $uri);
 	my $res = $ua->request($req);
@@ -105,7 +110,7 @@ for my $expected ( @test_items ) {
 # Non-existent item names and items with duplicate names
 
 while ( my ( $item_name, $expected_num ) = each %item_counts ) {
-	my $uri = URI->new("https://$host/items");
+	my $uri = URI->new("$protocol://$host/items");
 	$uri->query_form( name => $item_name );
 	my $req = HTTP::Request->new(GET => $uri);
 	my $res = $ua->request($req);
@@ -122,7 +127,7 @@ while ( my ( $item_name, $expected_num ) = each %item_counts ) {
 #
 
 for my $expected ( @test_items ) {
-	my $uri = URI->new("https://$host/items");
+	my $uri = URI->new("$protocol://$host/items");
 	$uri->query_form( name => $expected->{name}, match => 'fuzzy' );
 	my $req = HTTP::Request->new(GET => $uri);
 	my $res = $ua->request($req);
@@ -137,7 +142,7 @@ for my $expected ( @test_items ) {
 }
 
 while ( my ( $query, $expected_name ) = each %fuzzy_matches ) {
-	my $uri = URI->new("https://$host/items");
+	my $uri = URI->new("$protocol://$host/items");
 	$uri->query_form( name => $query, match => 'fuzzy' );
 	my $req = HTTP::Request->new(GET => $uri);
 	my $res = $ua->request($req);

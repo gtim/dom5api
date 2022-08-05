@@ -95,7 +95,7 @@ plan tests => sum map { 0 + keys %$_ } @sample_entities;
 
 for my $expected ( @sample_entities ) {
 	my $id = $expected->{id};
-	my $url = "https://$Test::Utils::host/$expected->{category}/$id";
+	my $url = "$Test::Utils::protocol://$Test::Utils::host/$expected->{category}/$id";
 	my $req = HTTP::Request->new(GET => $url);
 	my $res = $ua->request($req);
 
