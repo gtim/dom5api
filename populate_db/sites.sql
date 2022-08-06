@@ -11,10 +11,11 @@ CREATE TABLE sites (
 DROP TABLE IF EXISTS site_props;
 
 CREATE TABLE site_props (
-	site_id   INT NOT NULL,
-	prop_name TEXT NOT NULL,
-	value     TEXT NOT NULL,
-	PRIMARY KEY ( site_id, prop_name ),
+	site_id       INT NOT NULL,
+	prop_name     TEXT NOT NULL,
+	value         TEXT NOT NULL,
+	arrayprop_ix  INT,
+	PRIMARY KEY ( site_id, prop_name, arrayprop_ix ),
 	FOREIGN KEY (site_id) REFERENCES sites(id)
 		ON DELETE CASCADE
 );
