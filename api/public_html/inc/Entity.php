@@ -39,7 +39,8 @@ abstract class Entity implements JsonSerializable {
 
 		# get optional props from props table
 		if ( static::$Properties_Table_Name ) {
-			$optprops_stmt = $db->prepare( 'SELECT prop_name, value, arrayprop_ix FROM '.static::$Properties_Table_Name.' WHERE site_id=:id' );
+			$id_column_name = substr( static::$Table_Name, 0, -1 ) . '_id'; # e.g. sites -> site_id
+			$optprops_stmt = $db->prepare( 'SELECT prop_name, value, arrayprop_ix FROM '.static::$Properties_Table_Name.' WHERE '.$id_column_name.'=:id' );
 			$optprops_stmt->bindValue( ':id', $id, SQLITE3_INTEGER );
 			$optprops_res = $optprops_stmt->execute();
 			while ( $optprop = $optprops_res->fetchArray() ) {
