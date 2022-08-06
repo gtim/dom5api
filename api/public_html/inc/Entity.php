@@ -67,12 +67,12 @@ abstract class Entity implements JsonSerializable {
 	# return: array of Entities (empty array if no match)
 	public static function entities_with_name( string $name ) :array {
 		$db = new SQLite3( 'data/'.static::$Table_Name.'.db' );
-		$stmt = $db->prepare( 'SELECT '.implode(',',static::$Field_Names).' FROM '.static::$Table_Name.' WHERE name=:name' );
+		$stmt = $db->prepare( 'SELECT id FROM '.static::$Table_Name.' WHERE name=:name' );
 		$stmt->bindValue( ':name', $name, SQLITE3_TEXT );
 		$result = $stmt->execute();
 		$entities = array();
 		while ( $row = $result->fetchArray(SQLITE3_ASSOC) ) {
-			array_push( $entities, new static( props: $row ) );
+			array_push( $entities, static::from_id( $row['id'] ) );
 		}
 		$db->close();
 		return $entities;
@@ -85,7 +85,7 @@ abstract class Entity implements JsonSerializable {
 	public static function entities_with_similar_name( string $name, &$max_similarity ) :array {
 		$needle = static::name_similarity_preprocess($name);
 		$db = new SQLite3( 'data/'.static::$Table_Name.'.db' );
-		$stmt = $db->prepare( 'SELECT '.implode(',',static::$Field_Names).' FROM '.static::$Table_Name );
+		$stmt = $db->prepare( 'SELECT id, name FROM '.static::$Table_Name );
 		$result = $stmt->execute();
 		$max_similarity = -1e6;
 		$rows_at_max = array();
@@ -100,7 +100,7 @@ abstract class Entity implements JsonSerializable {
 		}
 		$db->close();
 		$entities = array_map(
-			function($row){ return new static( props: $row ); },
+			function($row){ return static::from_id( $row['id'] ); },
 			$rows_at_max
 		);
 		return $entities;
