@@ -6,10 +6,13 @@
  * Expects dom5inspector running at localhost:8000.
  */
 
+const assert = require('node:assert/strict');
+
 const puppeteer = require('puppeteer');
 
 const sqlite3 = require('sqlite3').verbose();
 const fs = require('fs');
+
 
 (async () => {
 
@@ -221,12 +224,22 @@ async function populate_sites_db( page ) {
 
 	// Site props table
 	
-	const stmt_insert_prop = db.prepare("INSERT INTO site_props (site_id, prop_name, value) VALUES ($id, $name, $value)");
+	const stmt_insert_prop = db.prepare("INSERT INTO site_props (site_id, prop_name, arrayprop_ix, value) VALUES ($id, $name, $ix, $value)");
 	const excluded_props = [
 		'id', 'name', 'path', 'level', 'rarity', // always present, included in sites table
 		'renderOverlay', 'matchProperty', 'searchable', 'listed_gempath', 'mpath2', // inspector internals/artifacts
 		'scale1', 'scale2', // included in composite property
 		'sprite', 'url' // probably not interesting
+	];
+	const array_props = [ 'com', 'futurenations', 'hcom', 'hmon', 'mon', 'nations', 'provdef', 'scales', 'sum' ];
+	const scalar_props = [
+		'F','A','W','E','S','D','N','B',
+		'alter','blood','conj','const','ench','evo','thau',
+		'cold','death','drain','misfortune','sloth','turmoil',
+		'evil','wilddefenders',
+		'fort','lab',
+		'n_sum1','n_sum2','n_sum3','n_sum4',
+		'aawe','addtolimitedrecruitment','adventure','ageratereduction','airshield','att','awe','bringgold','callgodbonus','coldres','corpselord','curse','darkvision','def','disease','domconflict','domspread','dragonlord','exp','fireres','gold','heal','holyfire','holypow','horror','ivylord','loc','magicresistancebonus','maximizeorder','mor','mpath','natcom','nationalrecruits','natmon','poisonres','prec','reinvigoration','res','reveal','rit','ritrng','rituallevelmodifier','scorch','scry','scryrange','shockres','str','sup','throneclustering','undying','unr','voidgate'
 	];
 	for ( let site_i = 0; site_i < sites.length; site_i++ ) {
 		// Can't grab the entire sitedata array in one go due to puppeteer limitations,
@@ -237,12 +250,19 @@ async function populate_sites_db( page ) {
 		for ( const prop_name of Object.keys(props) ) {
 			if ( excluded_props.includes(prop_name) ) {
 				continue;
+			} else if ( array_props.includes(prop_name) ) {
+				assert.ok( props[prop_name].constructor === Array, 'expected array prop' );
+				for ( const [arrayprop_ix, arrayprop_element ] of props[prop_name].entries() ) {
+					stmt_insert_prop.run( { $id: props.id, $name: prop_name, $value: arrayprop_element, $ix: arrayprop_ix });
+				}
+			} else if ( scalar_props.includes(prop_name ) ) {
+				if ( prop_name == 'mpath' ) { // trailing space
+					props[prop_name] = props[prop_name].trim();
+				}
+				stmt_insert_prop.run( { $id: props.id, $name: prop_name, $value: props[prop_name], $ix: null });
+			} else {
+				throw 'Unknown prop: ' + prop_name;
 			}
-			stmt_insert_prop.run( {
-				$id: props.id,
-				$name: prop_name,
-				$value: props[prop_name]
-			});
 		}
 	}
 	stmt_insert_prop.finalize();
