@@ -9,6 +9,7 @@
 use 5.34.0;
 use utf8;
 use Test::More;
+use Test::Deep;
 use LWP::UserAgent;
 use URI;
 use JSON 'decode_json';
@@ -47,10 +48,24 @@ our @sample_entities = (
 	{ category => 'mercs', id => 76, name => 'The Whisperer', bossname => 'Urvikel', commander_id => 2220, unit_id => 541, nrunits => 50 },
 
 	# Sites
-	{ category => 'sites', id => 1, name => 'The Smouldercone', path => 'Fire', level => 0, rarity => 'Never random' },
-	{ category => 'sites', id => 310, name => 'Tar Pits', path => 'Fire', level => 1, rarity => 'Common' },
-	{ category => 'sites', id => 1147, name => 'The Throne of the Churning Ocean', path => 'Holy', level => 0, rarity => 'Throne lvl2' },
-	{ category => 'sites', id => 1163, name => 'Hall of the Ivy King', path => 'Nature', level => 3, rarity => 'Rare' },
+	{ category => 'sites', id => 1, name => 'The Smouldercone', path => 'Fire', level => 0, rarity => 'Never random',
+		hcom => [87,89,923],
+		mpath => 'F4',
+		nations => [55],
+		scales => ['Heat'],
+       	},
+	{ category => 'sites', id => 310, name => 'Tar Pits', path => 'Fire', level => 1, rarity => 'Common', mpath => 'F1' },
+	{ category => 'sites', id => 1147, name => 'The Throne of the Churning Ocean', path => 'Holy', level => 0, rarity => 'Throne lvl2',
+		conj => '20%',
+		domspread => 2,
+		mpath => 'A1 W3',
+		scales => ['Turmoil'],
+		wilddefenders => 1,
+	},
+	{ category => 'sites', id => 1163, name => 'Hall of the Ivy King', path => 'Nature', level => 3, rarity => 'Rare',
+		mpath => 'N2',
+		scales => ['Growth'],
+	},
 
 	# Commanders
 	{ category => 'commanders', id => 5, name => 'Serpent Lord', size => 3, hp => 15 },
@@ -103,6 +118,10 @@ for my $expected ( @sample_entities ) {
 	my $received = decode_json( $res->content );
 	for my $field ( keys %$expected ) {
 		next if $field eq 'category'; # "category" not tested, only needed for endpoint URL
-		is( $received->{$field}, $expected->{$field}, "  $field" );
+		if ( ref($expected->{$field}) eq 'ARRAY' ) {
+			cmp_bag( $received->{$field}, $expected->{$field}, "  $field (bag)" );
+		} else {
+			is( $received->{$field}, $expected->{$field}, "  $field" );
+		}
 	}
 }

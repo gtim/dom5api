@@ -2,3 +2,4 @@ Tests to write:
 
 - ensure screenshot URL is returned
 - ensure screenshot is a PNG image
+- ensure no properties except for those expected are returned for some items

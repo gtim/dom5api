@@ -9,6 +9,9 @@ abstract class Entity implements JsonSerializable {
 	//   AND base endpoint url for screenshots ("items" in /items/:id/screenshot)
 	protected static $Table_Name;
 
+	// SQLite table name for optional properties.
+	protected static $Properties_Table_Name = false;
+
 	/*
 	 * Constructors
 	 */
@@ -18,23 +21,42 @@ abstract class Entity implements JsonSerializable {
 	) {
 	}
 
-	protected static function construct_entity( array $props ) {
-	}
-
 	# from_id
 	#
 	# Constructs entity from id
 	# return: Entity, or null if no matching ID
 	public static function from_id( int $id ) {
 		$db = new SQLite3( 'data/'.static::$Table_Name.'.db' );
+
+		# get all required columns from main table
 		$stmt = $db->prepare( 'SELECT '.implode(',',static::$Field_Names).' FROM '.static::$Table_Name.' WHERE id=:id' );
 		$stmt->bindValue( ':id', $id, SQLITE3_INTEGER );
-		$result = $stmt->execute();
-		if ( $row = $result->fetchArray(SQLITE3_ASSOC) ) {
-			$entity = new static( props: $row );
-		} else {
-			$entity = null;
+		$props = $stmt->execute()->fetchArray(SQLITE3_ASSOC);
+		if ( ! $props ) {
+			$db->close();
+			return null;
 		}
+
+		# get optional props from props table
+		if ( static::$Properties_Table_Name ) {
+			$optprops_stmt = $db->prepare( 'SELECT prop_name, value, arrayprop_ix FROM '.static::$Properties_Table_Name.' WHERE site_id=:id' );
+			$optprops_stmt->bindValue( ':id', $id, SQLITE3_INTEGER );
+			$optprops_res = $optprops_stmt->execute();
+			while ( $optprop = $optprops_res->fetchArray() ) {
+				$propname = $optprop['prop_name'];
+				$propval = is_numeric( $optprop['value'] ) ? 0+$optprop['value'] : $optprop['value'];
+				if ( $optprop['arrayprop_ix'] === null ) {
+					$props[$propname] = $propval;
+				} else {
+					if ( ! array_key_exists( $propname, $props ) ) {
+						$props[$propname] = array();
+					}
+					$props[$propname][] = $propval;
+				}
+			}
+		}
+
+		$entity = new static( props: $props );
 		$db->close();
 		return $entity;
 	}
