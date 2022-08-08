@@ -62,4 +62,4 @@ for my $name ( @nonunique_names ) {
 
 
 printf "%d non-unique name groups\n", 0+@nonunique_names;
-printf "%d stlil ambiguous\n", 0+@still_ambiguous_names;
+printf "%d still ambiguous\n", 0+@still_ambiguous_names;

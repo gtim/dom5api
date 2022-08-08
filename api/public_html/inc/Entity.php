@@ -62,47 +62,85 @@ abstract class Entity implements JsonSerializable {
 		return $entity;
 	}
 	
-	# entities_with_name
+	# entities_by_filter
 	#
-	# Constructs list of entities with name
+	# Constructs list of entities satisfying a filter.
+	# Filter should be an array of triples: ( property, relation, value ), e.g:
+	# [ ['size', '=', 4] ]
+	#
+	# If you (reader) have a neater solution to the larger problem of dynamic
+	# WHERE-clauses from query parameters, I'd be happy to hear from you,
+	#
 	# return: array of Entities (empty array if no match)
-	public static function entities_with_name( string $name ) :array {
+	public static function entities_by_filter( array $filter ) :array {
+
+		list( $ids, $names ) = static::_id_name_pairs_by_filter( $filter );
+		return array_map(
+			function($id) { return static::from_id($id); },
+			$ids
+		);
+	}
+
+	private static function _id_name_pairs_by_filter( array $filter ) :array {
+		if ( count($filter) > 20 )
+			throw new Exception('too many filters');
+
+		$sql_clauses = array('1');
+		$sql_bindings = array();
+		foreach ( $filter as $condition ) {
+			list( $property, $relation, $value ) = $condition;
+			if ( $property == 'name' && $relation == '=' ) {
+				$sql_clauses[] = 'name = :name';
+				$sql_bindings[] = [ ':name', $value, SQLITE3_TEXT ];
+			} elseif ( $property == 'size' && $relation == '=' ) {
+				$sql_clauses[] = 'size = :size';
+				$sql_bindings[] = [ ':size', $value, SQLITE3_INTEGER ];
+			} else {
+				throw new Exception("invalid name/relation combination: $property $relation" );
+			}
+		}
+
 		$db = new SQLite3( 'data/'.static::$Table_Name.'.db' );
-		$stmt = $db->prepare( 'SELECT id FROM '.static::$Table_Name.' WHERE name=:name' );
-		$stmt->bindValue( ':name', $name, SQLITE3_TEXT );
+		$stmt = $db->prepare($sql= 'SELECT id, name FROM '.static::$Table_Name.' WHERE ' . implode(' AND ', $sql_clauses) );
+		foreach ( $sql_bindings as $binding ) {
+			$stmt->bindValue($binding[0],$binding[1],$binding[2]);
+		}
 		$result = $stmt->execute();
-		$entities = array();
+		$ids = array();
+		$names = array();
 		while ( $row = $result->fetchArray(SQLITE3_ASSOC) ) {
-			array_push( $entities, static::from_id( $row['id'] ) );
+			array_push( $ids, $row['id'] );
+			array_push( $names, $row['name'] );
 		}
 		$db->close();
-		return $entities;
+		return [ $ids, $names ];
 	}
 
 	# entities_with_similar name
 	#
 	# Constructs list of entities with similar name, using fuzzy string matching
 	# return: array of Entities. Contains the best match, or multiple matches if tied
-	public static function entities_with_similar_name( string $name, &$max_similarity ) :array {
+	public static function entities_with_similar_name( string $name, array $filter ) :array {
+
+		list( $ids, $names ) = static::_id_name_pairs_by_filter( $filter );
+
 		$needle = static::name_similarity_preprocess($name);
-		$db = new SQLite3( 'data/'.static::$Table_Name.'.db' );
-		$stmt = $db->prepare( 'SELECT id, name FROM '.static::$Table_Name );
-		$result = $stmt->execute();
+
 		$max_similarity = -1e6;
-		$rows_at_max = array();
-		while ( $row = $result->fetchArray(SQLITE3_ASSOC) ) {
-			$similarity = static::name_similarity( $needle, static::name_similarity_preprocess($row['name']) );
+		$ids_at_max = array();
+		for ( $i = 0; $i < count($ids); $i++ ) {
+			$similarity = static::name_similarity( $needle, static::name_similarity_preprocess($names[$i]) );
 			if ( $similarity > $max_similarity ) {
 				$max_similarity = $similarity;
-				$rows_at_max = array( $row );
+				$ids_at_max = array( $ids[$i] );
 			} elseif ( $similarity == $max_similarity ) {
-				array_push( $rows_at_max, $row );
+				array_push( $ids_at_max, $ids[$i] );
 			}
 		}
-		$db->close();
+
 		$entities = array_map(
-			function($row){ return static::from_id( $row['id'] ); },
-			$rows_at_max
+			function($id){ return static::from_id( $id ); },
+			$ids_at_max
 		);
 		return $entities;
 	}

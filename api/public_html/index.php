@@ -64,10 +64,22 @@ function gen_route_callback_get_by_name( string $class, string $category ) {
 
 		require_once("inc/$class.php");
 
+		$extra_filters = array();
+		if ( $class == 'Unit' && array_key_exists( 'size', $params ) ) {
+			if ( ! in_array( $params['size'], [1,2,3,4,5,6] ) ) {
+				$response->getBody()->write( json_encode( [ 'errors' => [ [
+					'title' => 'Invalid size value'
+				] ] ] ) );
+				return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
+			}
+			$extra_filters[] = [ 'size', '=', $params['size'] ];
+		}
+
 		if ( array_key_exists( 'match', $params ) && $params['match'] == 'fuzzy' ) {
-			$items = $class::entities_with_similar_name( $params['name'], $similarity );
+			$items = $class::entities_with_similar_name( $params['name'], $extra_filters );
 		} else {
-			$items = $class::entities_with_name( $params['name'] );
+			$filter = array_merge( [ [ 'name', '=', $params['name'] ] ], $extra_filters );
+			$items = $class::entities_by_filter($filter);
 		}
 		$data = array( $category => $items );
 		$response->getBody()->write( json_encode( $data, JSON_UNESCAPED_SLASHES ) );
