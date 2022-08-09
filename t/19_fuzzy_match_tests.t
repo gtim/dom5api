@@ -3,7 +3,7 @@
 #
 # 19_fuzzy_match_tests.t
 #
-# Test return values of fuzzy name matching with match=fuzzy in /items, /spells, /units, /commanders, /sites and /mercs.
+# Test return values of fuzzy name matching with match=fuzzy in /items, /spells, /units, /sites and /mercs.
 #
 
 use 5.34.0;
@@ -35,8 +35,6 @@ my %fuzzy_matches = (
 	units => {
 		'logrian slinger' => 'Logrian Slinger',
 		'einherse' => 'Einhere',
-	},
-	commanders => {
 		'kalamukha' => 'Kala-Mukha',
 		'etimmu' => '“Etimmu“ - Wraith Lord',
 	},

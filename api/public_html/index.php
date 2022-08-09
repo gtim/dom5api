@@ -13,7 +13,6 @@ $middleware = $app->addErrorMiddleware(true,true,true);
 #
 # /items/{id}
 # /spells/{id}
-# /commanders/{id}
 # /units/{id}
 # /sites/{id}
 # /mercs/{id}
@@ -36,7 +35,6 @@ function gen_route_callback_get_by_id( string $class ) {
 
 $app->get( "/items/{id:[0-9]+}",      gen_route_callback_get_by_id('Item') );
 $app->get( "/spells/{id:[0-9]+}",     gen_route_callback_get_by_id('Spell') );
-$app->get( "/commanders/{id:[0-9]+}", gen_route_callback_get_by_id('Commander') );
 $app->get( "/units/{id:[0-9]+}",      gen_route_callback_get_by_id('Unit') );
 $app->get( "/sites/{id:[0-9]+}",      gen_route_callback_get_by_id('Site') );
 $app->get( "/mercs/{id:[0-9]+}",      gen_route_callback_get_by_id('Merc') );
@@ -44,7 +42,7 @@ $app->get( "/mercs/{id:[0-9]+}",      gen_route_callback_get_by_id('Merc') );
 #
 # /items?name=...
 # /items?name=...&match=fuzzy
-# and corresponding for spells, commanders, units, sites and mercs.
+# and corresponding for spells, units, sites and mercs.
 #
 # returns array of matching items 
 #
@@ -90,7 +88,6 @@ function gen_route_callback_get_by_name( string $class, string $category ) {
 
 $app->get( '/items',      gen_route_callback_get_by_name( 'Item', 'items' ) );
 $app->get( '/spells',     gen_route_callback_get_by_name( 'Spell', 'spells' ) );
-$app->get( '/commanders', gen_route_callback_get_by_name( 'Commander', 'commanders' ) );
 $app->get( '/units',      gen_route_callback_get_by_name( 'Unit', 'units' ) );
 $app->get( '/sites',      gen_route_callback_get_by_name( 'Site', 'sites' ) );
 $app->get( '/mercs',      gen_route_callback_get_by_name( 'Merc', 'mercs' ) );

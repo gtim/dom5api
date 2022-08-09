@@ -23,7 +23,6 @@ my %invalid_ids = (
 	items      => [ 446, 500,     0, -1, 1e6, 'foo', sprintf('%.0f',2**50), "'" ],
 	spells     => [ 1, 149, 1177, 0, -1, 1e6, 'foo', sprintf('%.0f',2**50), "'" ],
 	units      => [ 4000, 10,     0, -1, 1e6, 'foo', sprintf('%.0f',2**50), "'" ],
-	commanders => [ 1, 4000, 10,  0, -1, 1e6, 'foo', sprintf('%.0f',2**50), "'" ],
 	sites      => [ 1200,         0, -1, 1e6, 'foo', sprintf('%.0f',2**50), "'" ],
 	mercs      => [ 100,          0, -1, 1e6, 'foo', sprintf('%.0f',2**50), "'" ],
 );

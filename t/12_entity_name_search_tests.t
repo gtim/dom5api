@@ -59,7 +59,7 @@ my %name_counts = (
 		'The Throne of the Churning Ocean' => 1,
 		'Hall of the Ivy King' => 1,
 	},
-	'commanders' => {
+	'units' => {
 		'Nothing' => 0,
 		'Serpent Lord' => 2, # MA, LA
 		'Master of the Games' => 1,
@@ -79,13 +79,12 @@ my %name_counts = (
 		'Piconye Scholar' => 1,
 		'Ifrit Sultan' => 1,
 		'“\'Umm Ghulah“ - Mother Ghul' => 1,
-	},
-	'units' => {
-		'Nothing' => 0,
 		'Standard' => 4,
 		'Arssartut' => 1,
 		'Ghul' => 4,
-	}
+		'Air Elemental' => 6,
+		'Living Mercury' => 5,
+	},
 );
 
 plan tests => 2 * sum map { 0 + keys %$_ } values %name_counts; 

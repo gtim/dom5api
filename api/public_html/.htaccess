@@ -2,7 +2,6 @@ RewriteEngine On
 
 RewriteRule ^items/(\d+)/screenshot$ data/screenshot/item/$1.png [QSA,L]
 RewriteRule ^spells/(\d+)/screenshot$ data/screenshot/spell/$1.png [QSA,L]
-RewriteRule ^commanders/(\d+)/screenshot$ data/screenshot/unit/$1.png [QSA,L]
 RewriteRule ^units/(\d+)/screenshot$ data/screenshot/unit/$1.png [QSA,L]
 RewriteRule ^sites/(\d+)/screenshot$ data/screenshot/site/$1.png [QSA,L]
 RewriteRule ^mercs/(\d+)/screenshot$ data/screenshot/merc/$1.png [QSA,L]

@@ -1,7 +1,7 @@
 /*
  * populate_dbs.js
  *
- * Populate sqlite3 databases of all items, spells, commanders, units, mercs and sites.
+ * Populate sqlite3 databases of all items, spells, units, mercs and sites.
  *
  * Expects dom5inspector running at localhost:8000.
  */
@@ -26,7 +26,6 @@ const fs = require('fs');
 
 	await populate_items_db(page);
 	await populate_spells_db(page);
-	await populate_commanders_db(page);
 	await populate_units_db(page);
 	await populate_mercs_db(page);
 	await populate_sites_db(page);
@@ -97,61 +96,6 @@ async function populate_spells_db( page ) {
 }
 
 /*
- * Commanders
- */
-
-async function populate_commanders_db( page ) {
-	const db = new sqlite3.Database('../data/commanders.db' ).serialize();
-	
-	// Create tables
-	const queries = fs.readFileSync('commanders.sql').toString().split(';').filter( (q) => /\S/.test(q) ); 
-	for ( const query of queries ) {
-		db.run(query);
-	}
-	const units = await page.evaluate(_ => {
-		return Promise.resolve(
-			DMI.modctx.unitdata
-				.filter( unit =>
-					unit.type == "c"
-					|| unit.typechar == "Pretender"
-					|| unit.typechar == "Commander"
-					|| unit.typechar !== undefined && unit.typechar.startsWith("cmdr")
-				).filter( unit => Number.isInteger( unit.id ) ) // skip inspector-"duplicated" units, e.g. #443.02, for summons and occasionally multiple nations
-				.map( unit => { return {
-					$id: unit.id,
-					$name: unit.fullname,
-					$hp: unit.hp,
-					$size: unit.size
-				}; })
-		);
-	} );
-	const stmt_insert_unit = db.prepare("INSERT INTO commanders (id, name, hp, size) VALUES ($id, $name, $hp, $size)");
-	for ( const unit of units ) {
-		stmt_insert_unit.run( unit );
-	}
-	stmt_insert_unit.finalize();
-
-	// Props table
-	await populate_units_props_table(page, db, 'commander', units.length);
-
-	db.close();
-}
-
-async function populate_units_props_table( page, db, category, num_entities ) {
-	// XXX temporary helper function until "commanders" category is removed
-	const excluded_props = [
-		'id', 'name', 'hp', 'size', // always present, included in commanders table
-		// the following have not yet been handled:
-		'A', 'B', 'D', 'E', 'F', 'H', 'N', 'S', 'W', 'aboleth', 'aciddigest', 'acidshield', 'addrandomage', 'adept_research', 'adeptsacr', 'adventurers', 'ainorec', 'airattuned', 'aisinglerec', 'alchemy', 'allret', 'almostundead', 'ambidextrous', 'amphibian', 'animal', 'animalawe', 'ap', 'appetite', 'aquatic', 'assassin', 'astralattuned', 'astralfetters', 'astralrange', 'att', 'autoblessed', 'autocompete', 'autodishealer', 'autohealer', 'autosum', 'awe', 'banefireshield', 'basecost', 'batstartsum1', 'batstartsum1d3', 'batstartsum1d6', 'batstartsum2', 'batstartsum2d6', 'batstartsum3', 'batstartsum3d6', 'batstartsum4d6', 'batstartsum5d6', 'batstartsum6d6', 'battlesum5', 'beartattoo', 'beastmaster', 'beckon', 'berserk', 'blessbers', 'blessfly', 'blind', 'bloodvengeance', 'bluntres', 'boartattoo', 'body', 'bodyguard', 'bonusspells', 'bringeroffortune', 'bug', 'bugreform', 'carcasscollector', 'casting_enc', 'castledef', 'changetargetgenderforseductionandseductionimmune', 'chaospower', 'chaosrec', 'cheapgod20', 'cheapgod40', 'cleanshape', 'clockworklord', 'cold', 'coldblood', 'coldpower', 'coldrec', 'coldres', 'coldsummon', 'combatcaster', 'combatspeed', 'commaster', 'comslave', 'corpseconstruct', 'corpseeater', 'corrupt', 'createdby', 'crossbreeder', 'crownonly', 'curseattacker', 'curseluckshield', 'damagerev', 'darkpower', 'darkvision', 'deathattuned', 'deathcurse', 'deathdisease', 'deathfire', 'deathparalyze', 'def', 'defector', 'defenceorganiser', 'defiler', 'demon', 'digest', 'disbelieve', 'diseasecloud', 'diseaseres', 'divineins', 'domimmortal', 'domsummon', 'domsummon20', 'doomhorror', 'douse', 'dragonlord', 'drainimmune', 'drake', 'dreanimator', 'dungeon', 'earthattuned', 'elegist', 'elementrange', 'enc', 'enchrebate10', 'enchrebate50', 'entangle', 'eracodes', 'ethereal', 'ethtrue', 'eyeloss', 'eyes', 'fallpower', 'falsearmy', 'farthronekill', 'fear', 'female', 'fireattuned', 'firepower', 'firerange', 'fireres', 'fireshield', 'firstshape', 'fixedname', 'fixedresearch', 'fixforgebonus', 'float', 'flying', 'foot', 'foreignmagicboost', 'forestshape', 'forestsurvival', 'forgebonus', 'formationfighter', 'fortkill', 'fullname', 'gcost', 'gemprod', 'goldcost', 'graphicsize', 'greaterhorror', 'growhp', 'guardianspiritmodifier', 'haltheretic', 'hand', 'head', 'heal', 'heat', 'heathensummon', 'heatrec', 'heretic', 'holy', 'homeshape', 'homesick', 'horrordeserter', 'horrormark', 'horrormarked', 'horsetattoo', 'hpoverflow', 'hpoverslow', 'iceforging', 'iceprot', 'illusion', 'illusionary', 'immortal', 'immortalrespawn', 'inanimate', 'incorporate', 'incunrest', 'indepmove', 'indepspells', 'indepstay', 'inept_research', 'infernoret', 'inquisitor', 'insane', 'insanify', 'inspirational', 'inspiringres', 'invisible', 'invulnerable', 'ironvul', 'isadaeva', 'isashah', 'isayazad', 'ivylord', 'kokytosret', 'labpromotion', 'lamialord', 'lanceok', 'landdamage', 'landenc', 'landshape', 'latehero', 'leader', 'leper', 'lesserhorror', 'linkname', 'listed_mpath', 'localsun', 'magicbeing', 'magicboostA', 'magicboostALL', 'magicboostD', 'magicboostE', 'magicboostF', 'magicboostN', 'magicboostS', 'magicboostW', 'magicleader', 'magicpower', 'magicstudy', 'makepearls', 'mapmove', 'mason', 'mastersmith', 'matchProperty', 'maxage', 'mind', 'mindcollar', 'mindslime', 'mindvessel', 'minprison', 'minsizeleader', 'misc', 'mor', 'moralebonus', 'mountainrec', 'mountainsurvival', 'mounted', 'mountedbeserk', 'mpath', 'mr', 'mummification', 'mummify', 'n_summon', 'nametype', 'nationname', 'natureattuned', 'naturerange', 'neednoteat', 'nobadevents', 'noheal', 'nohof', 'nomovepen', 'norange', 'noriverpass', 'nowish', 'older', 'onebattlespell', 'onisummon', 'pathboost', 'pathboostland', 'pathcost', 'patience', 'patrolbonus', 'percentpathreduction', 'petrify', 'pierceres', 'pillagebonus', 'plaguedoctor', 'plainshape', 'plant', 'poisonarmor', 'poisoncloud', 'poisonres', 'poisonskin', 'polyimmune', 'pooramphibian', 'popkill', 'preanimator', 'prec', 'prophetshape', 'prot', 'raiseonkill', 'raiseshape', 'randomspell', 'rcost', 'rcostsort', 'realms', 'reanimator', 'reanimpriest', 'reclimit', 'recruitedby', 'reformtime', 'regeneration', 'reincarnation', 'reinvigoration', 'renderOverlay', 'reqlab', 'reqtemple', 'researchbonus', 'researchwithoutmagic', 'resources', 'ressize', 'rpcost', 'rt', 'sailingmaxunitsize', 'sailingshipsize', 'sailsize', 'saltvul', 'scalewalls', 'searchable', 'secondshape', 'secondtmpshape', 'seduce', 'sendlesserhorrormult', 'shapechange', 'shatteredsoul', 'shockres', 'shrinkhp', 'siegebonus', 'singlebattle', 'skirmisher', 'slashres', 'slave', 'slaver', 'slaverbonus', 'sleepaura', 'slimer', 'slothresearch', 'slots', 'slow_to_recruit', 'snaketattoo', 'snowmove', 'sorceryrange', 'sorttype', 'speciallook', 'spellsinger', 'spiritsight', 'spreadchaos', 'spreaddeath', 'spreaddom', 'spreadgrowth', 'spreadorder', 'springpower', 'sprite', 'spy', 'standard', 'startaff', 'startage', 'startdom', 'startheroab', 'startingaff', 'startitem', 'stealthy', 'stonebeing', 'stormimmune', 'stormpower', 'str', 'stunimmunity', 'stupid', 'stygianguide', 'succubus', 'summerpower', 'summon', 'summon1', 'summon5', 'summonedby', 'summonedfrom', 'sunawe', 'supplybonus', 'swampsurvival', 'swimming', 'taskmaster', 'taxcollector', 'teleport', 'templetrainer', 'theftofthesunawe', 'thronekill', 'titles', 'tmpastralgems', 'tmpfiregems', 'trample', 'trampswallow', 'transformation', 'triple3mon', 'triplegod', 'triplegodmag', 'turmoilsummon', 'twiceborn', 'type', 'typechar', 'uncurableaffliction', 'undead', 'undeadleader', 'undisciplined', 'undying', 'unify', 'unique', 'unprep', 'unseen', 'unsurr', 'unteleportable', 'uwbug', 'uwdamage', 'uwfireshield', 'uwheat', 'uwregen', 'voidsanity', 'voidsum', 'wastesurvival', 'waterattuned', 'waterbreathing', 'watershape', 'winterpower', 'wintersummon1d3', 'wolf', 'wolftattoo', 'woundfend', 'xploss', 'xpshape', 'yearturn'
-	];
-	const array_props = [];
-	const array_jsonprops = ['randompaths'];
-	const scalar_props = ['immobile'];
-	const unreadable_props = ['armor','cheapgod20','cheapgod40','createdby','dupes','eracodes','nations','recruitedby','sprite','summonedby','summonedfrom','weapons'];
-	await populate_props_table( page, db, category, num_entities, scalar_props, array_props, array_jsonprops, excluded_props, unreadable_props );
-}
-
-/*
  * Units
  */
 
@@ -183,7 +127,16 @@ async function populate_units_db( page ) {
 	stmt_insert_unit.finalize();
 	
 	// Props table
-	await populate_units_props_table(page, db, 'unit', units.length);
+	const excluded_props = [
+		'id', 'name', 'hp', 'size', // always present, included in units table
+		// the following have not yet been handled:
+		'A', 'B', 'D', 'E', 'F', 'H', 'N', 'S', 'W', 'aboleth', 'aciddigest', 'acidshield', 'addrandomage', 'adept_research', 'adeptsacr', 'adventurers', 'ainorec', 'airattuned', 'aisinglerec', 'alchemy', 'allret', 'almostundead', 'ambidextrous', 'amphibian', 'animal', 'animalawe', 'ap', 'appetite', 'aquatic', 'assassin', 'astralattuned', 'astralfetters', 'astralrange', 'att', 'autoblessed', 'autocompete', 'autodishealer', 'autohealer', 'autosum', 'awe', 'banefireshield', 'basecost', 'batstartsum1', 'batstartsum1d3', 'batstartsum1d6', 'batstartsum2', 'batstartsum2d6', 'batstartsum3', 'batstartsum3d6', 'batstartsum4d6', 'batstartsum5d6', 'batstartsum6d6', 'battlesum5', 'beartattoo', 'beastmaster', 'beckon', 'berserk', 'blessbers', 'blessfly', 'blind', 'bloodvengeance', 'bluntres', 'boartattoo', 'body', 'bodyguard', 'bonusspells', 'bringeroffortune', 'bug', 'bugreform', 'carcasscollector', 'casting_enc', 'castledef', 'changetargetgenderforseductionandseductionimmune', 'chaospower', 'chaosrec', 'cheapgod20', 'cheapgod40', 'cleanshape', 'clockworklord', 'cold', 'coldblood', 'coldpower', 'coldrec', 'coldres', 'coldsummon', 'combatcaster', 'combatspeed', 'commaster', 'comslave', 'corpseconstruct', 'corpseeater', 'corrupt', 'createdby', 'crossbreeder', 'crownonly', 'curseattacker', 'curseluckshield', 'damagerev', 'darkpower', 'darkvision', 'deathattuned', 'deathcurse', 'deathdisease', 'deathfire', 'deathparalyze', 'def', 'defector', 'defenceorganiser', 'defiler', 'demon', 'digest', 'disbelieve', 'diseasecloud', 'diseaseres', 'divineins', 'domimmortal', 'domsummon', 'domsummon20', 'doomhorror', 'douse', 'dragonlord', 'drainimmune', 'drake', 'dreanimator', 'dungeon', 'earthattuned', 'elegist', 'elementrange', 'enc', 'enchrebate10', 'enchrebate50', 'entangle', 'eracodes', 'ethereal', 'ethtrue', 'eyeloss', 'eyes', 'fallpower', 'falsearmy', 'farthronekill', 'fear', 'female', 'fireattuned', 'firepower', 'firerange', 'fireres', 'fireshield', 'firstshape', 'fixedname', 'fixedresearch', 'fixforgebonus', 'float', 'flying', 'foot', 'foreignmagicboost', 'forestshape', 'forestsurvival', 'forgebonus', 'formationfighter', 'fortkill', 'fullname', 'gcost', 'gemprod', 'goldcost', 'graphicsize', 'greaterhorror', 'growhp', 'guardianspiritmodifier', 'haltheretic', 'hand', 'head', 'heal', 'heat', 'heathensummon', 'heatrec', 'heretic', 'holy', 'homeshape', 'homesick', 'horrordeserter', 'horrormark', 'horrormarked', 'horsetattoo', 'hpoverflow', 'hpoverslow', 'iceforging', 'iceprot', 'illusion', 'illusionary', 'immortal', 'immortalrespawn', 'inanimate', 'incorporate', 'incunrest', 'indepmove', 'indepspells', 'indepstay', 'inept_research', 'infernoret', 'inquisitor', 'insane', 'insanify', 'inspirational', 'inspiringres', 'invisible', 'invulnerable', 'ironvul', 'isadaeva', 'isashah', 'isayazad', 'ivylord', 'kokytosret', 'labpromotion', 'lamialord', 'lanceok', 'landdamage', 'landenc', 'landshape', 'latehero', 'leader', 'leper', 'lesserhorror', 'linkname', 'listed_mpath', 'localsun', 'magicbeing', 'magicboostA', 'magicboostALL', 'magicboostD', 'magicboostE', 'magicboostF', 'magicboostN', 'magicboostS', 'magicboostW', 'magicleader', 'magicpower', 'magicstudy', 'makepearls', 'mapmove', 'mason', 'mastersmith', 'matchProperty', 'maxage', 'mind', 'mindcollar', 'mindslime', 'mindvessel', 'minprison', 'minsizeleader', 'misc', 'mor', 'moralebonus', 'mountainrec', 'mountainsurvival', 'mounted', 'mountedbeserk', 'mpath', 'mr', 'mummification', 'mummify', 'n_summon', 'nametype', 'nationname', 'natureattuned', 'naturerange', 'neednoteat', 'nobadevents', 'noheal', 'nohof', 'nomovepen', 'norange', 'noriverpass', 'nowish', 'older', 'onebattlespell', 'onisummon', 'pathboost', 'pathboostland', 'pathcost', 'patience', 'patrolbonus', 'percentpathreduction', 'petrify', 'pierceres', 'pillagebonus', 'plaguedoctor', 'plainshape', 'plant', 'poisonarmor', 'poisoncloud', 'poisonres', 'poisonskin', 'polyimmune', 'pooramphibian', 'popkill', 'preanimator', 'prec', 'prophetshape', 'prot', 'raiseonkill', 'raiseshape', 'randomspell', 'rcost', 'rcostsort', 'realms', 'reanimator', 'reanimpriest', 'reclimit', 'recruitedby', 'reformtime', 'regeneration', 'reincarnation', 'reinvigoration', 'renderOverlay', 'reqlab', 'reqtemple', 'researchbonus', 'researchwithoutmagic', 'resources', 'ressize', 'rpcost', 'rt', 'sailingmaxunitsize', 'sailingshipsize', 'sailsize', 'saltvul', 'scalewalls', 'searchable', 'secondshape', 'secondtmpshape', 'seduce', 'sendlesserhorrormult', 'shapechange', 'shatteredsoul', 'shockres', 'shrinkhp', 'siegebonus', 'singlebattle', 'skirmisher', 'slashres', 'slave', 'slaver', 'slaverbonus', 'sleepaura', 'slimer', 'slothresearch', 'slots', 'slow_to_recruit', 'snaketattoo', 'snowmove', 'sorceryrange', 'sorttype', 'speciallook', 'spellsinger', 'spiritsight', 'spreadchaos', 'spreaddeath', 'spreaddom', 'spreadgrowth', 'spreadorder', 'springpower', 'sprite', 'spy', 'standard', 'startaff', 'startage', 'startdom', 'startheroab', 'startingaff', 'startitem', 'stealthy', 'stonebeing', 'stormimmune', 'stormpower', 'str', 'stunimmunity', 'stupid', 'stygianguide', 'succubus', 'summerpower', 'summon', 'summon1', 'summon5', 'summonedby', 'summonedfrom', 'sunawe', 'supplybonus', 'swampsurvival', 'swimming', 'taskmaster', 'taxcollector', 'teleport', 'templetrainer', 'theftofthesunawe', 'thronekill', 'titles', 'tmpastralgems', 'tmpfiregems', 'trample', 'trampswallow', 'transformation', 'triple3mon', 'triplegod', 'triplegodmag', 'turmoilsummon', 'twiceborn', 'type', 'typechar', 'uncurableaffliction', 'undead', 'undeadleader', 'undisciplined', 'undying', 'unify', 'unique', 'unprep', 'unseen', 'unsurr', 'unteleportable', 'uwbug', 'uwdamage', 'uwfireshield', 'uwheat', 'uwregen', 'voidsanity', 'voidsum', 'wastesurvival', 'waterattuned', 'waterbreathing', 'watershape', 'winterpower', 'wintersummon1d3', 'wolf', 'wolftattoo', 'woundfend', 'xploss', 'xpshape', 'yearturn'
+	];
+	const array_props = [];
+	const array_jsonprops = ['randompaths'];
+	const scalar_props = ['immobile'];
+	const unreadable_props = ['armor','cheapgod20','cheapgod40','createdby','dupes','eracodes','nations','recruitedby','sprite','summonedby','summonedfrom','weapons'];
+	await populate_props_table( page, db, 'unit', units.length, scalar_props, array_props, array_jsonprops, excluded_props, unreadable_props );
 
 	db.close();
 }
@@ -291,8 +244,6 @@ async function populate_sites_db( page ) {
 async function populate_props_table( page, db, category, num_entities, scalar_props, array_props, array_jsonprops, excluded_props, unreadable_props ) {
 	
 	const stmt_insert_prop = db.prepare("INSERT INTO "+category+"_props ("+category+"_id, prop_name, arrayprop_ix, value) VALUES ($id, $name, $ix, $value)");
-
-	if ( category == 'commander' ) { category = 'unit'; } // XXX temporary hack until "commanders" category is removed
 
 	for ( let site_i = 0; site_i < num_entities; site_i++ ) {
 		// Can't grab the entire array in one go due to puppeteer limitations, so fetch them one at a time.
