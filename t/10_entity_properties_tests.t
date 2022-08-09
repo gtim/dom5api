@@ -107,32 +107,63 @@ my %sample_entities = (
 	
 );
 
-# one test per element, plus one test per entity for request status
+# test plan
+#
+# three test per element (ID search + esact name search + fuzzy name search),
+# + five test per entity:
+#     ID search request status
+#     exact name search request status & correct-ID check
+#     fuzzy name search request status & correct-ID check
 
 {
 	my @all_entities = map { @$_ } values %sample_entities;
+	my $num_entities = 0 + @all_entities;
 	my $total_num_props = sum map { 0 + keys %$_ } @all_entities;
-	plan tests => $total_num_props + @all_entities;
+	plan tests => 3 * $total_num_props + (1+2+2) * $num_entities;
 }
 
-# request and test all sample entities
+# test all sample entities 
 
 my $ua = LWP::UserAgent->new;
 for my $category ( keys %sample_entities ) {
 	for my $expected ( @{$sample_entities{$category}} ) {
-		my $id = $expected->{id};
-		my $url = "$Test::Utils::protocol://$Test::Utils::host/$category/$id";
-		my $req = HTTP::Request->new(GET => $url);
-		my $res = $ua->request($req);
 
-		ok( $res->is_success, "requesting $url");
-		my $received = decode_json( $res->content );
-		for my $field ( keys %$expected ) {
-			if ( ref($expected->{$field}) eq 'ARRAY' ) {
-				cmp_bag( $received->{$field}, $expected->{$field}, "  $field (bag)" );
-			} else {
-				is( $received->{$field}, $expected->{$field}, "  $field" );
-			}
+		# test ID endpoint
+		{
+			my $url = "$Test::Utils::protocol://$Test::Utils::host/$category/$expected->{id}";
+			my $res = $ua->request( HTTP::Request->new(GET => $url) );
+			ok( $res->is_success, "requesting $url");
+			my $received = decode_json( $res->content );
+			test_expected_vs_received( $expected, $received );
+		}
+
+		# test exact-name and fuzzy-name endpoints
+		for my $fuzzy ( 0, 1 ) {
+			my $url = URI->new( "$Test::Utils::protocol://$Test::Utils::host/$category" );
+			$url->query_form( match => 'fuzzy' ) if $fuzzy;
+			$url->query_form( name => $expected->{name} );
+			my $res = $ua->request( HTTP::Request->new(GET => $url) );
+			ok( $res->is_success, "requesting $url");
+			my $received = decode_json( $res->content );
+			my @entities_with_correct_ID = grep { $_->{id} == $expected->{id} } @{ $received->{$category} };
+			is( 0+@entities_with_correct_ID, 1, "name search returned correct ID (fuzzy:$fuzzy)");
+			test_expected_vs_received( $expected, $entities_with_correct_ID[0] );
 		}
 	}
 }
+
+
+# entity deep test sub
+
+sub test_expected_vs_received {
+	my ( $expected, $received ) = @_;
+	for my $field ( keys %$expected ) {
+		if ( ref($expected->{$field}) eq 'ARRAY' ) {
+			cmp_bag( $received->{$field}, $expected->{$field}, "  $field (bag)" );
+		} else {
+			is( $received->{$field}, $expected->{$field}, "  $field" );
+		}
+	}
+}
+
+
