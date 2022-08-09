@@ -2,8 +2,7 @@ Tests to write:
 
 - ensure screenshot URL is returned
 - ensure screenshot is a PNG image
-- ensure no properties except for those expected are returned for some items
+- ensure no properties except for those expected are returned for some entities
 - ensure optional properties present on /:category?name=, with and without fuzzy match
-- unit/commander randompaths
 - size=... parameter for units name search
 - unit size=... parameter for units fuzzy matching
