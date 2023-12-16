@@ -110,11 +110,12 @@ All responses are JSON-encoded. The returned objects are currently bare-bones, b
 
 | Property | Example value | Notes | 
 | -------- | ------------- | ----------- |
-| id | 538 |  |
-| name | Theurg Communicant | |
-| size | 2 |  |
-| hp | 10 | |
-| screenshot | /units/538/screenshot | Link to dom5inspector screenshot |
+| id | 785 |  |
+| name | Gygja | |
+| hp | 38 | |
+| size | 4 |  |
+| randompaths | paths: 'SDNB', levels: '1', chance: '100', paths: 'SDNB', levels: '1', chance: '100', paths: 'SDNB', levels: '1', chance: '10' | Appears only for units with random paths, returned as an array of objects |
+| screenshot | /units/785/screenshot | Link to dom5inspector screenshot |
 
 
 ### Site
